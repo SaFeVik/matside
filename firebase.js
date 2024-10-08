@@ -1,5 +1,6 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
 import { getStorage, ref, uploadBytes } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-storage.js";
+import { getFirestore } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyB94CA3-iFO4fJo3J2YHdGt70bQOVkQAk0",
@@ -13,23 +14,7 @@ const firebaseConfig = {
 
 
 const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
 const storage = getStorage(app);
 
-// Funksjon for å laste opp et bilde
-function uploadImage(file) {
-    const storageRef = ref(storage, 'images/' + file.name); // Angi sti i Storage
-    uploadBytes(storageRef, file).then((snapshot) => {
-        console.log('Bilde lastet opp:', snapshot);
-    }).catch((error) => {
-        console.error('Feil ved opplasting:', error);
-    });
-}
-
-// Bruk funksjonen med en fil (f.eks. fra en input)
-const fileInput = document.getElementById('file-input');
-fileInput.addEventListener('change', (event) => {
-    const file = event.target.files[0];
-    if (file) {
-        uploadImage(file);
-    }
-});
+export {db, storage}

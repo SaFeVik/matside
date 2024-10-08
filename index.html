@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="no">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,29 +8,138 @@
 
     <link rel="stylesheet" href="style.css">
 </head>
+
 <body>
     <header>
         <h1>Matside</h1>
         <div class="user-div">
-            <div class="username">Username</div>
+            <p class="username">Username</p>
             <button class="logout-button">Logg ut</button>
         </div>
     </header>
 
     <div class="dishes-div">
-        <input type="file" id="file-input"/>
+        <div class="filter-div">
+            <div class="filter-div-top">
+                <div class="filter-title-div">
+                    <img class="filter-arrow rotated" src="./images/arrow_left.svg">
+                    <h3>Filter</h3>
+                </div>
+                <div class="search-div">
+                    <input id="search-input" type="text">
+                    <button id="search-button">Søk</button>
+                </div>
+            </div>
+            <div class="filter-options-div">
+                <h4>Personer</h4>
+                <div class="options filter-people">
+                    <p class="option checked">Felix</p>
+                    <p class="option">Marita</p>
+                </div>
+            </div>
+
+            <div class="filter-options-div">
+                <h4>Type</h4>
+                <div class="options filter-type">
+                    <p class="option checked">Frokost</p>
+                    <p class="option">Lunsj</p>
+                    <p class="option checked">Middag</p>
+                    <p class="option checked">Dessert</p>
+                </div>
+            </div>
+
+            <div class="filter-options-div">
+                <h4>Kjøtt</h4>
+                <div class="options filter-meat">
+                    <p class="option checked">Kjøtt</p>
+                    <p class="option checked">Fisk</p>
+                    <p class="option checked">Kylling</p>
+                    <p class="option checked">Vegetar</p>
+                </div>
+            </div>
+
+            <div class="filter-options-div">
+                <h4>Favoritter</h4>
+                <div class="options filter-favorite">
+                    <p class="option">Vis bare favoritter</p>
+                </div>
+            </div>
+
+            <button id="filter-button">Filtrer</button>
+        </div>
+
         <button class="add-dish-button">Legg til rett</button>
-        <div class="dishes">
-            <div class="dish"></div>
-            <div class="dish"></div>
-            <div class="dish"></div>
-            <div class="dish"></div>
-            <div class="dish"></div>
-            <div class="dish"></div>
-            <div class="dish"></div>
+
+        <div class="dish-template hide">
+            <div class="dish-template-header">
+                <p class="dish-template-user">Felix Vikern Vik</p>
+                <img src="images/x.svg" class="dish-template-x">
+            </div>
+            <input value="Tikka masala" class="dish-template-title"></input>
+            <input value="Med syltet agurk, poteter og fløtesaus" class="dish-template-subtitle"></input>
+            <div class="dish-template-image-button-div">
+                <label class="custom-file-upload">
+                    Last opp bilde
+                    <input type="file" class="dish-template-image-button" />
+                </label>
+                <img src="." class="dish-template-image-preview">
+            </div>
+            <select class="dish-template-meat">
+                <option value="kjøtt">Kjøtt</option>
+                <option value="fisk">Fisk</option>
+                <option value="kylling">Kylling</option>
+                <option value="vegetar">Vegetar</option>
+            </select>
+            <div class="dish-template-recipie-div">
+                <input class="dish-template-recipie-link" value="trinesmatblogg.no"></input>
+                <img src="images/recipie.svg" class="dish-template-recipie">
+            </div>
+            <select class="dish-template-type">
+                <option value="frokost">Frokost</option>
+                <option value="lunsj">Lunsj</option>
+                <option value="middag">Middag</option>
+                <option value="dessert">Dessert</option>
+            </select>
+            <div class="dish-template-footer">
+                <div class="delete-dish-button">Slett</div>
+                <div class="save-dish-button">Lagre</div>
+            </div>
         </div>
     </div>
+    <div class="dishes">
+        <div class="dish">
+            <div class="dish-header">
+                <div class="dish-header-top">
+                    <p class="dish-user">Felix Vikern Vik</p>
+                    <p class="dish-edit">Rediger</p>
+                </div>
+                <div class="dish-title">
+                    Laks
+                </div>
+                <div class="dish-subtitle">
+                    Med ris, brokkoli og avokado-mango-salat
+                </div>
+            </div>
+            <div class="dish-body">
+                <div class="dish-type">Middag</div>
+                <div class="dish-star-div">
+                    <img src="images/star.svg" class="dish-star">
+                </div>
+                <div class="dish-recipie-div">
+                    <a href="" class="dish-recipie">
+                        <img src="images/recipie.svg">
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    </div>
 
+    <script src="https://cdn.jsdelivr.net/npm/heic2any@latest/dist/heic2any.min.js"></script>
     <script src="firebase.js" type="module"></script>
+    <script src="script.js" type="module"></script>
+    <script src="auth.js" type="module"></script>
+    <script src="foodManager.js" type="module"></script>
 </body>
+
 </html>

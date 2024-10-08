@@ -1,0 +1,18 @@
+Lag en boks med alle funksjoner *
+    favoritt *
+    brukernavn *
+    kjøtt, fisk, kylling, vegetar *
+    middag, lunsj, frokost, dessert *
+    oppskriftlink *
+
+legg til boks
+Hente inn alle bokser og vis på siden
+Rediger boks
+Slett boks (inne på rediger)
+Prøv lykken
+
+Når siden lastes inn skal loadDishes() hente inn data fra databasen og lage elementer. Den skal ha parameter sort som bestemmer hvordan ting skal sorteres.
+Trykk på legg til rett skal automatisk lage en rett med tomme verdier. Når man trykker på lagre skal verdiene legges til. Trykker man på slett skal den slettes. 
+Trykk på rediger -> funksjon som. 
+
+Man kan filtrere personer, type, kjøtt, favoritt
