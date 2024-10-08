@@ -10,9 +10,14 @@ const imagePreviewImg = dishTemplateEl.querySelector('.dish-template-image-previ
 /* Filter */
 document.querySelector('.filter-title-div').addEventListener('click', () => {
     document.querySelector('.filter-arrow').classList.toggle('rotated')
-    document.querySelector('.filter-options-div').classList.toggle('hide')
-
+    document.querySelector('.filter-div').classList.toggle('hide')
 })
+document.querySelectorAll('.option').forEach(option => {
+    option.addEventListener('click', (e) => {
+        e.target.classList.toggle('checked')
+    })
+})
+
 
 document.querySelector('.add-dish-button').addEventListener('click', () => {
     dishTemplateEl.classList.remove('hide')
