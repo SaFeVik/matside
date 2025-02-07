@@ -19,6 +19,46 @@ header {
     align-items: center;
 }
 
+/* LOGIN */
+.login-div {
+    width: 350px;
+    box-shadow: 0 0 8px rgba(0, 0, 0, 0.15);
+    padding: 8px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 8px;
+}
+.login-div.hide {
+    display: none;
+}
+.login-div h1 {
+    text-align: center;
+}
+.login-div input {
+    height: 33.5px;
+    padding: 8px;
+    outline: none;
+}
+.signup-show {
+    text-decoration: underline;
+    cursor: pointer;
+}
+.signup-div {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+.signup-div.hide {
+    display: none;
+}
+
+/* MAIN */
+main.hide {
+    display: none;
+}
+
 button, .custom-file-upload {
     padding: 4px 8px;
     border: 1px solid black;
@@ -33,6 +73,9 @@ button, .custom-file-upload {
     display: flex;
     align-items: center;
     gap: 16px;
+}
+.user-div.hide {
+    display: none;
 }
 
 /* TOP PART */
@@ -158,18 +201,18 @@ button, .custom-file-upload {
 .dish-title {
     font-size: 24px;
     text-align: left;
-    border-bottom: 1px solid #FFB0B0;
+/*     border-bottom: 1px solid #FFB0B0; */
 }
 .dish-subtitle {
     text-align: left;
-    border-bottom: 1px solid #FFB0B0;
+/*     border-bottom: 1px solid #FFB0B0; */
 }
 .dish-user {
     text-align: left;
-    border-bottom: 1px solid #FFB0B0;
+/*     border-bottom: 1px solid #FFB0B0; */
 }
 .dish-edit {
-    border-bottom: 1px solid #FFB0B0;
+/*     border-bottom: 1px solid #FFB0B0; */
     cursor: pointer;
 }
 
@@ -197,6 +240,9 @@ button, .custom-file-upload {
     height: 32px;
     background-color: white;
 }
+.dish-star-div.favourite {
+    background-color: rgb(255, 245, 108);
+}
 .dish-star {
     width: 24px;
 }
@@ -223,7 +269,7 @@ button, .custom-file-upload {
     position: absolute;
     top: 0;
     left: 0;
-    background-color: rgb(255, 179, 179);
+    background-color: rgb(255, 255, 255);
     padding: 4px 8px;
 }
 
@@ -238,7 +284,24 @@ button, .custom-file-upload {
     flex-direction: column;
     gap: 8px;
     box-shadow: 0 0 8px rgba(0, 0, 0, 0.15);
+    position: fixed;
+    left: 50%;
+    top: 50%;
+    transform: translateX(-50%) translateY(-50%);
+    animation: rotate-back-and-forth 1s ease-in-out infinite;
 }
+@keyframes rotate-back-and-forth {
+    0% {
+      transform: translateX(-50%) translateY(-50%) rotate(0.5deg);
+    }
+    50% {
+      transform: translateX(-50%) translateY(-50%) rotate(-0.5deg);
+    }
+    100% {
+      transform: translateX(-50%) translateY(-50%) rotate(0.5deg);
+    }
+}
+
 .dish-template input, .dish-template select{
     padding: 4px 8px;
     outline: none;
@@ -262,11 +325,19 @@ button, .custom-file-upload {
 }
 .dish-template-image-button-div {
     margin-block: 8px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
 }
 
-.dish-template-image-preview {
-    margin-left: 16px;
+.dish-template-star {
+    width: 24px;
+    cursor: pointer;
 }
+.dish-template-star.favourite {
+    background-color: yellow;
+}
+
 .dish-template-recipie-div {
     display: flex;
     align-items: center;

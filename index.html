@@ -17,126 +17,144 @@
             <button class="logout-button">Logg ut</button>
         </div>
     </header>
-
-    <div class="top-div">
-        <div class="filter-search-div">
-            <div class="filter-search-div-top">
-                <div class="filter-title-div">
-                    <img class="filter-arrow" src="./images/arrow_left.svg">
-                    <h3>Filter</h3>
+    <div class="login-div">
+        <h1>Skriv inn navnet ditt</h1>
+        <input type="text" class="login-name">
+        <button class="login-button">Logg inn</button>
+        <div class="signup-show">Har du ikke bruker? Trykk her.</div>
+        <div class="signup-div hide">
+            <input type="text" class="signup-name">
+            <button class="signup-button">Registrer</button>
+        </div>
+    </div>
+    <main class="hide">
+        <div class="top-div">
+            <div class="filter-search-div">
+                <div class="filter-search-div-top">
+                    <div class="filter-title-div">
+                        <img class="filter-arrow" src="./images/arrow_left.svg">
+                        <h3>Filter</h3>
+                    </div>
+                    <div class="search-div">
+                        <input id="search-input" type="text">
+                        <button id="search-button">Søk</button>
+                    </div>
                 </div>
-                <div class="search-div">
-                    <input id="search-input" type="text">
-                    <button id="search-button">Søk</button>
+                <div class="filter-div hide">
+                    <div class="filter-options-div">
+                        <h4>Personer</h4>
+                        <div class="options filter-people">
+                        </div>
+                    </div>
+
+                    <div class="filter-options-div">
+                        <h4>Type</h4>
+                        <div class="options filter-type">
+                            <p class="option checked">Frokost</p>
+                            <p class="option checked">Lunsj</p>
+                            <p class="option checked">Middag</p>
+                            <p class="option checked">Dessert</p>
+                        </div>
+                    </div>
+
+                    <div class="filter-options-div">
+                        <h4>Kjøtt</h4>
+                        <div class="options filter-meat">
+                            <p class="option checked">Kjøtt</p>
+                            <p class="option checked">Fisk</p>
+                            <p class="option checked">Kylling</p>
+                            <p class="option checked">Vegetar</p>
+                        </div>
+                    </div>
+
+                    <div class="filter-options-div">
+                        <h4>Favoritter</h4>
+                        <div class="options filter-favorite">
+                            <p class="option">Vis bare favoritter</p>
+                        </div>
+                    </div>
+
+                    <button id="filter-button">Filtrer</button>
                 </div>
             </div>
-            <div class="filter-div hide">
-                <div class="filter-options-div">
-                    <h4>Personer</h4>
-                    <div class="options filter-people">
-                        <p class="option checked">Felix</p>
-                        <p class="option">Marita</p>
-                    </div>
+
+            <button class="add-dish-button">Legg til rett</button>
+
+            <!-- DISH TEMPLATE -->
+            <div class="dish-template hide">
+                <div class="dish-template-header">
+                    <p class="dish-template-user">Felix Vikern Vik</p>
+                    <img src="images/x.svg" class="dish-template-x">
                 </div>
-    
-                <div class="filter-options-div">
-                    <h4>Type</h4>
-                    <div class="options filter-type">
-                        <p class="option checked">Frokost</p>
-                        <p class="option">Lunsj</p>
-                        <p class="option checked">Middag</p>
-                        <p class="option checked">Dessert</p>
-                    </div>
+                <input value="" class="dish-template-title"></input>
+                <input value="" class="dish-template-subtitle"></input>
+                <div class="dish-template-image-button-div">
+                    <button type="button" class="take-pic-button">Ta bilde</button>
+                    <button type="button" class="select-pic-button">Hent bilde fra kamerarull</button>
+                    
+                    <!-- Input for å ta bilde (kamera) -->
+                    <input type="file" class="dish-template-image-button-take" accept="image/*" capture="environment" style="display: none;">
+                    <!-- Input for å velge bilde fra galleri -->
+                    <input type="file" class="dish-template-image-button-select" accept="image/*" style="display: none;">
+                    
+                    <img src="." class="dish-template-image-preview" alt="Forhåndsvisning av bilde">
+                    <img src="images/star.svg" class="dish-template-star">
                 </div>
-    
-                <div class="filter-options-div">
-                    <h4>Kjøtt</h4>
-                    <div class="options filter-meat">
-                        <p class="option checked">Kjøtt</p>
-                        <p class="option checked">Fisk</p>
-                        <p class="option checked">Kylling</p>
-                        <p class="option checked">Vegetar</p>
-                    </div>
+                <select class="dish-template-meat">
+                    <option value="kjøtt">Kjøtt</option>
+                    <option value="fisk">Fisk</option>
+                    <option value="kylling">Kylling</option>
+                    <option value="vegetar">Vegetar</option>
+                </select>
+                <div class="dish-template-recipie-div">
+                    <input class="dish-template-recipie-link" value=""></input>
+                    <img src="images/recipie.svg" class="dish-template-recipie">
                 </div>
-    
-                <div class="filter-options-div">
-                    <h4>Favoritter</h4>
-                    <div class="options filter-favorite">
-                        <p class="option">Vis bare favoritter</p>
-                    </div>
+                <select class="dish-template-type">
+                    <option value="Middag">Middag</option>
+                    <option value="Lunsj">Lunsj</option>
+                    <option value="Frokost">Frokost</option>
+                    <option value="Dessert">Dessert</option>
+                </select>
+                <div class="dish-template-footer">
+                    <div class="delete-dish-button">Slett</div>
+                    <div class="save-dish-button">Lagre</div>
                 </div>
-    
-                <button id="filter-button">Filtrer</button>
             </div>
         </div>
 
-        <button class="add-dish-button">Legg til rett</button>
-
-        <div class="dish-template hide">
-            <div class="dish-template-header">
-                <p class="dish-template-user">Felix Vikern Vik</p>
-                <img src="images/x.svg" class="dish-template-x">
-            </div>
-            <input value="Tikka masala" class="dish-template-title"></input>
-            <input value="Med syltet agurk, poteter og fløtesaus" class="dish-template-subtitle"></input>
-            <div class="dish-template-image-button-div">
-                <label class="custom-file-upload">
-                    Last opp bilde
-                    <input type="file" class="dish-template-image-button" />
-                </label>
-                <img src="." class="dish-template-image-preview">
-            </div>
-            <select class="dish-template-meat">
-                <option value="kjøtt">Kjøtt</option>
-                <option value="fisk">Fisk</option>
-                <option value="kylling">Kylling</option>
-                <option value="vegetar">Vegetar</option>
-            </select>
-            <div class="dish-template-recipie-div">
-                <input class="dish-template-recipie-link" value="trinesmatblogg.no"></input>
-                <img src="images/recipie.svg" class="dish-template-recipie">
-            </div>
-            <select class="dish-template-type">
-                <option value="frokost">Frokost</option>
-                <option value="lunsj">Lunsj</option>
-                <option value="middag">Middag</option>
-                <option value="dessert">Dessert</option>
-            </select>
-            <div class="dish-template-footer">
-                <div class="delete-dish-button">Slett</div>
-                <div class="save-dish-button">Lagre</div>
-            </div>
-        </div>
-    </div>
-    <div class="dishes">
-        <div class="dish">
-            <div class="dish-header">
-                <div class="dish-header-top">
-                    <p class="dish-user">Felix Vikern Vik</p>
-                    <p class="dish-edit">Rediger</p>
+        <!-- DISHES -->
+        <div class="dishes">
+            <!-- EXAMPLE DISH -->
+            <div class="dish" data-dish-id="" data-dish-meat="">
+                <div class="dish-header">
+                    <div class="dish-header-top">
+                        <p class="dish-user">Felix Vikern Vik</p>
+                        <p class="dish-edit">Rediger</p>
+                    </div>
+                    <div class="dish-title">
+                        Laks
+                    </div>
+                    <div class="dish-subtitle">
+                        Med ris, brokkoli og avokado-mango-salat
+                    </div>
                 </div>
-                <div class="dish-title">
-                    Laks
-                </div>
-                <div class="dish-subtitle">
-                    Med ris, brokkoli og avokado-mango-salat
-                </div>
-            </div>
-            <div class="dish-body">
-                <div class="dish-type">Middag</div>
-                <div class="dish-star-div">
-                    <img src="images/star.svg" class="dish-star">
-                </div>
-                <div class="dish-recipie-div">
-                    <a href="" class="dish-recipie">
-                        <img src="images/recipie.svg">
-                    </a>
+                <div class="dish-body">
+                    <div class="dish-type">Middag</div>
+                    <div class="dish-star-div">
+                        <img src="images/star.svg" class="dish-star favourite">
+                    </div>
+                    <div class="dish-recipie-div">
+                        <a href="" class="dish-recipie">
+                            <img src="images/recipie.svg">
+                        </a>
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
-    </div>
+    </main>
 
+    
     <script src="https://cdn.jsdelivr.net/npm/heic2any@latest/dist/heic2any.min.js"></script>
     <script src="firebase.js" type="module"></script>
     <script src="script.js" type="module"></script>
