@@ -1,5 +1,11 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
-import { getStorage, ref, uploadBytes } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-storage.js";
+import { 
+    getStorage, 
+    ref, 
+    uploadBytes, 
+    deleteObject, 
+    getDownloadURL 
+} from "https://www.gstatic.com/firebasejs/9.22.0/firebase-storage.js";
 import { getFirestore } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
 
 const firebaseConfig = {
@@ -12,9 +18,8 @@ const firebaseConfig = {
   measurementId: "G-72QLN1X328"
 };
 
-
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const storage = getStorage(app);
 
-export {db, storage}
+export { db, storage, ref, uploadBytes, deleteObject, getDownloadURL };

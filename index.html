@@ -4,7 +4,20 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Matside</title>
+    <meta name="description" content="En nettside for å lagre og dele matoppskrifter med familie og venner">
+    <meta name="keywords" content="mat, oppskrifter, middag, lunsj, frokost, dessert">
+    <meta name="author" content="Marita">
+    <meta name="theme-color" content="#4b6584">
+    <title>Matside - Lagre og del matoppskrifter</title>
+    
+    <!-- Apple-spesifikke meta-tagger -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Matside">
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="./images/favicon.png">
+    <link rel="apple-touch-icon" href="./images/apple-touch-icon.png">
 
     <link rel="stylesheet" href="style.css">
 </head>
@@ -90,7 +103,8 @@
                 <input value="" class="dish-template-subtitle"></input>
                 <div class="dish-template-image-button-div">
                     <button type="button" class="take-pic-button">Ta bilde</button>
-                    <button type="button" class="select-pic-button">Hent bilde fra kamerarull</button>
+                    <button type="button" class="select-pic-button">Velg bilde</button>
+                    <button type="button" class="remove-image-button">Fjern bilde</button>
                     
                     <!-- Input for å ta bilde (kamera) -->
                     <input type="file" class="dish-template-image-button-take" accept="image/*" capture="environment" style="display: none;">
