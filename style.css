@@ -12,69 +12,71 @@
 
 /* HEADER */
 header {
-    padding: 16px 32px 8px 32px;
+    padding: 16px 32px;
     display: flex;
     justify-content: space-between;
     background-color: #FFB0B0;
     align-items: center;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 /* LOGIN */
 .login-div {
     width: 350px;
-    box-shadow: 0 0 8px rgba(0, 0, 0, 0.15);
-    padding: 8px;
-    margin: 0 auto;
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+    padding: 20px;
+    margin: 20px auto;
     display: flex;
     flex-direction: column;
-    gap: 8px;
-    margin-top: 8px;
+    gap: 12px;
+    border-radius: 12px;
+    background-color: white;
 }
 .login-div.hide {
     display: none;
 }
 .login-div h1 {
     text-align: center;
+    font-size: 22px;
+    margin-bottom: 8px;
 }
 .login-div input {
-    height: 33.5px;
-    padding: 8px;
+    height: 40px;
+    padding: 10px 12px;
     outline: none;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    font-size: 14px;
+    transition: border-color 0.2s ease;
+}
+.login-div input:focus {
+    border-color: #FFB0B0;
+    box-shadow: 0 0 0 2px rgba(255, 176, 176, 0.1);
+}
+.login-button, .signup-button {
+    background-color: #FFB0B0;
+    color: white;
+    font-weight: 500;
+    padding: 10px;
+    border-radius: 8px;
+}
+.login-button:hover, .signup-button:hover {
+    background-color: #ff9e9e;
 }
 .signup-show {
-    text-decoration: underline;
+    text-decoration: none;
     cursor: pointer;
+    color: #666;
+    font-size: 14px;
+    text-align: center;
+    margin-top: 8px;
 }
-.signup-div {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-}
-.signup-div.hide {
-    display: none;
+.signup-show:hover {
+    color: #FFB0B0;
 }
 
 /* MAIN */
 main.hide {
-    display: none;
-}
-
-button, .custom-file-upload {
-    padding: 4px 8px;
-    border: 1px solid black;
-    box-shadow: 0 0 8px rgba(0, 0, 0, 0.15);
-    background-color: white;
-    cursor: pointer;
-    font-size: 16px;
-    color: black;
-}
-
-.user-div {
-    display: flex;
-    align-items: center;
-    gap: 16px;
-}
-.user-div.hide {
     display: none;
 }
 
@@ -83,14 +85,26 @@ button, .custom-file-upload {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 8px;
+    gap: 12px;
     width: 350px;
     margin: 0 auto;
     margin-bottom: 16px;
+    margin-top: 16px;
 }
 
 .add-dish-button {
     width: 100%;
+    padding: 10px;
+    border-radius: 8px;
+    font-weight: 500;
+    background-color: #FFB0B0;
+    color: white;
+    border: none;
+    transition: background-color 0.2s ease;
+}
+
+.add-dish-button:hover {
+    background-color: #ff9e9e;
 }
 
 /* SEARCH */
@@ -98,15 +112,38 @@ button, .custom-file-upload {
     display: flex;
     align-items: center;
     gap: 8px;
+    width: 100%;
 }
+
 #search-input {
-    padding: 8px;
-    height: 32px;
+    padding: 10px 12px;
+    height: 40px;
     outline: none;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    flex-grow: 1;
+    font-size: 14px;
+    transition: border-color 0.2s ease;
 }
+
+#search-input:focus {
+    border-color: #FFB0B0;
+    box-shadow: 0 0 0 2px rgba(255, 176, 176, 0.1);
+}
+
 #search-button {
-    height: 32px;
-    padding: 0 8px;
+    height: 40px;
+    padding: 0 16px;
+    border-radius: 8px;
+    background-color: #FFB0B0;
+    color: white;
+    border: none;
+    font-weight: 500;
+    transition: background-color 0.2s ease;
+}
+
+#search-button:hover {
+    background-color: #ff9e9e;
 }
 
 /* FILTER */
@@ -114,57 +151,80 @@ button, .custom-file-upload {
     background-color: white;
     display: flex;
     flex-direction: column;
-    gap: 8px;
-    padding: 8px;
+    gap: 12px;
+    padding: 16px;
     width: 350px;
-    box-shadow: 0 0 8px rgba(0, 0, 0, 0.15);
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
     margin-top: 8px;
+    border-radius: 12px;
 }
-.filter-search-div-top {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 8px;
+
+/* Update button styles globally */
+button, .custom-file-upload {
+    padding: 8px 16px;
+    border: none;
+    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.05);
+    background-color: white;
+    cursor: pointer;
+    font-size: 15px;
+    color: #333;
+    border-radius: 8px;
+    transition: background-color 0.2s ease;
 }
+
+button:hover {
+    background-color: #f5f5f5;
+}
+
+/* Update filter styles */
 .filter-title-div {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 12px;
     cursor: pointer;
+    padding: 8px 0;
 }
-.filter-arrow {
-    width: 16px;
-    transition: transform 0.35s ease;
+
+.filter-title-div h3 {
+    font-weight: 500;
+    font-size: 16px;
 }
-.filter-arrow.rotated {
-    transform: rotate(90deg);
-}
-.filter-div {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-}
-.filter-div.hide {
-    display: none;
-}
-.filter-options-div {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-}
+
 .filter-div .options {
     display: flex;
+    flex-wrap: wrap;
     gap: 8px;
+    margin-bottom: 8px;
 }
+
 .filter-div .option {
     cursor: pointer;
-    padding: 2px 4px;
+    padding: 6px 12px;
     background-color: rgb(255, 255, 255);
-    border: 1px solid rgb(213, 213, 213);
+    border: 1px solid #e0e0e0;
+    border-radius: 20px;
+    font-size: 14px;
+    transition: all 0.2s ease;
 }
+
 .filter-div .option.checked {
     background-color: rgb(255, 255, 255);
-    border: 1px solid black;
+    border: 1px solid #FFB0B0;
+    color: #333;
+    box-shadow: 0 2px 4px rgba(255, 176, 176, 0.2);
+}
+
+#filter-button {
+    background-color: #FFB0B0;
+    color: white;
+    font-weight: 500;
+    padding: 8px 16px;
+    margin-top: 8px;
+    align-self: center;
+}
+
+#filter-button:hover {
+    background-color: #ff9e9e;
 }
 
 /* DISHES */
@@ -172,8 +232,10 @@ button, .custom-file-upload {
     display: flex;
     flex-wrap: wrap;
     justify-content: center;
-    gap: 8px;
+    gap: 16px;
+    padding: 8px;
 }
+
 .dish {
     background-color: white;
     display: flex;
@@ -181,167 +243,366 @@ button, .custom-file-upload {
     position: relative;
     width: 100%;
     max-width: 350px;
-    height: 400px;
-    box-shadow: 0 0 8px rgba(0, 0, 0, 0.15);
+    height: 380px;
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+    border-radius: 12px;
+    overflow: hidden;
 }
 
 /* HEADER */
 .dish-header {
     position: relative;
     text-align: center;
-    padding: 8px;
+    padding: 16px;
     background-color: rgb(255, 255, 255);
     color: black;
+    border-bottom: 1px solid #f0f0f0;
 }
+
 .dish-header-top {
     display: flex;
     justify-content: space-between;
+    margin-bottom: 8px;
 }
 
 .dish-title {
-    font-size: 24px;
+    font-size: 22px;
     text-align: left;
-/*     border-bottom: 1px solid #FFB0B0; */
+    font-weight: bold;
+    margin-bottom: 4px;
 }
+
 .dish-subtitle {
     text-align: left;
-/*     border-bottom: 1px solid #FFB0B0; */
+    font-size: 14px;
+    color: #555;
+    line-height: 1.4;
+    /* Initial state: clamp to 1 line */
+    display: -webkit-box;
+    -webkit-line-clamp: 1;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-height: 1.4em; /* Approx 1 line height */
+    position: relative; /* Needed for the ::after pseudo-element */
+    /* Make space for 'Les mer...' if needed, added by JS */
 }
+
+/* Style for the 'Les mer...' indicator */
+.dish-subtitle.is-clamped::after {
+    content: '... Les mer';
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    background: linear-gradient(to right, rgba(255, 255, 255, 0), rgba(255, 255, 255, 1) 40%);
+    padding-left: 15px;
+    font-size: 13px;
+    color: #888;
+    font-weight: 500;
+    cursor: pointer;
+}
+
+/* Expanded state */
+.dish-subtitle.expanded {
+    display: block; /* Override -webkit-box */
+    -webkit-line-clamp: initial; /* Remove line clamping */
+    overflow: visible;
+    text-overflow: clip;
+    max-height: none; /* Allow full height */
+    padding-right: 0; /* Remove space for indicator */
+    cursor: default; /* Normal cursor when expanded */
+}
+
+/* Hide 'Les mer...' when expanded */
+.dish-subtitle.expanded::after {
+    display: none;
+}
+
 .dish-user {
     text-align: left;
-/*     border-bottom: 1px solid #FFB0B0; */
+    font-size: 13px;
+    color: #888;
 }
+
 .dish-edit {
-/*     border-bottom: 1px solid #FFB0B0; */
     cursor: pointer;
+    font-size: 13px;
+    color: #555;
+    padding: 2px 6px;
+    border-radius: 4px;
+    transition: background-color 0.2s ease;
+}
+
+.dish-edit:hover {
+    background-color: #f0f0f0;
 }
 
 /* BODY */
 .dish-body {
     position: relative;
-    background-image: url("./images/rett.jpg");
     background-position: center;
     background-repeat: no-repeat;
-    background-size:cover;
+    background-size: cover;
     width: 100%;
     height: 100%;
     display: flex;
     justify-content: center;
     align-items: center;
 }
+
+/* No image state styling */
+.dish-body:not([style*="background-image"]) {
+    background-color: #f9f9f9;
+    background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="%23e0e0e0"><path d="M12,3C7.03,3 3,7.03 3,12C3,16.97 7.03,21 12,21C16.97,21 21,16.97 21,12C21,7.03 16.97,3 12,3M12,5C13.1,5 14,5.9 14,7C14,8.1 13.1,9 12,9C10.9,9 10,8.1 10,7C10,5.9 10.9,5 12,5M17,15C15.9,15 15,14.1 15,13C15,11.9 15.9,11 17,11C18.1,11 19,11.9 19,13C19,14.1 18.1,15 17,15M7,15C5.9,15 5,14.1 5,13C5,11.9 5.9,11 7,11C8.1,11 9,11.9 9,13C9,14.1 8.1,15 7,15Z"/></svg>');
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: 64px 64px;
+}
+
+/* Type indicator styles */
+.dish-type {
+    position: absolute;
+    top: 12px;
+    left: 12px;
+    background-color: rgba(255, 255, 255, 0.85);
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 14px;
+    font-weight: 500;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+/* Meat type indicator (badge in bottom left) */
+.dish::before {
+    content: '';
+    position: absolute;
+    bottom: 12px;
+    left: 12px;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background-size: 60%;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-color: rgba(255, 255, 255, 0.85);
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    z-index: 2;
+}
+
+/* Meat type colors */
+.dish[data-dish-meat="kjøtt"]::before {
+    background-color: #FFCDD2; /* Light red for meat */
+    background-image: url('./images/meat.svg');
+}
+
+.dish[data-dish-meat="fisk"]::before {
+    background-color: #BBDEFB; /* Light blue for fish */
+    background-image: url('./images/fish.svg');
+}
+
+.dish[data-dish-meat="kylling"]::before {
+    background-color: #FFE0B2; /* Light orange for chicken */
+    background-image: url('./images/chicken.svg');
+}
+
+.dish[data-dish-meat="vegetar"]::before {
+    background-color: #C8E6C9; /* Light green for vegetarian */
+    background-image: url('./images/vegetable.svg');
+}
+
 .dish-star-div {
     position: absolute;
     display: flex;
     justify-content: center;
     align-items: center;
-    top: 0;
-    right: 0;
+    top: 12px;
+    right: 12px;
     width: 32px;
     height: 32px;
-    background-color: white;
+    background-color: rgba(255, 255, 255, 0.85);
+    border-radius: 50%;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    transition: transform 0.2s ease;
 }
+
+.dish-star-div:hover {
+    transform: scale(1.1);
+}
+
 .dish-star-div.favourite {
-    background-color: rgb(255, 245, 108);
+    background-color: rgb(255, 245, 98);
 }
+
 .dish-star {
-    width: 24px;
+    width: 18px;
+    height: 18px;
 }
+
 .dish-recipie-div {
     position: absolute;
     display: flex;
     justify-content: center;
     align-items: center;
-    bottom: 0;
-    right: 0;
-    width: 36px;
-    height: 42px;
-    background-color: white;
+    bottom: 12px;
+    right: 12px;
+    width: 32px;
+    height: 32px;
+    background-color: rgba(255, 255, 255, 0.85);
+    border-radius: 50%;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    transition: transform 0.2s ease;
 }
+
+.dish-recipie-div:hover {
+    transform: scale(1.1);
+}
+
 .dish-recipie {
     display: flex;
     justify-content: center;
     align-items: center;
 }
+
 .dish-recipie img {
-    width: 24px;
-}
-.dish-type {
-    position: absolute;
-    top: 0;
-    left: 0;
-    background-color: rgb(255, 255, 255);
-    padding: 4px 8px;
+    width: 18px;
+    height: 18px;
+    object-fit: contain; /* Ensure aspect ratio is maintained */
 }
 
 /* TEMPLATE */
 .dish-template {
     width: 350px;
-    background-color: rgb(226, 249, 255);
-    position: absolute;
-    z-index: 2;
-    padding: 8px;
+    background-color: white;
+    position: fixed;
+    z-index: 1000;
+    padding: 16px;
     display: flex;
     flex-direction: column;
-    gap: 8px;
-    box-shadow: 0 0 8px rgba(0, 0, 0, 0.15);
-    position: fixed;
-    left: 50%;
+    gap: 12px;
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2);
     top: 50%;
-    transform: translateX(-50%) translateY(-50%);
-    animation: rotate-back-and-forth 1s ease-in-out infinite;
+    left: 50%;
+    transform: translate(-50%, -50%) scale(1); /* End state for transform */
+    border-radius: 12px;
+    animation: fadeInScaleUp 0.3s ease-out;
+    max-height: 90vh;
+    overflow-y: auto;
+    opacity: 1; /* End state for opacity */
 }
-@keyframes rotate-back-and-forth {
+
+@keyframes fadeInScaleUp { /* Renamed animation */
     0% {
-      transform: translateX(-50%) translateY(-50%) rotate(0.5deg);
-    }
-    50% {
-      transform: translateX(-50%) translateY(-50%) rotate(-0.5deg);
+      transform: translate(-50%, -50%) scale(0.95);
+      opacity: 0;
     }
     100% {
-      transform: translateX(-50%) translateY(-50%) rotate(0.5deg);
+      transform: translate(-50%, -50%) scale(1);
+      opacity: 1;
     }
 }
 
-.dish-template input, .dish-template select{
-    padding: 4px 8px;
+.dish-template input, .dish-template select {
+    padding: 8px 12px;
     outline: none;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    font-size: 14px;
+    transition: border-color 0.2s ease;
 }
+
+.dish-template input:focus, .dish-template select:focus {
+    border-color: #FFB0B0;
+    box-shadow: 0 0 0 2px rgba(255, 176, 176, 0.2);
+}
+
 .dish-template.hide {
     display: none;
 }
+
 .dish-template-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    padding-bottom: 8px;
+    border-bottom: 1px solid #f0f0f0;
 }
+
+.dish-template-user {
+    font-size: 14px;
+    color: #666;
+}
+
 .dish-template-x {
     cursor: pointer;
+    transition: transform 0.2s ease;
 }
+
+.dish-template-x:hover {
+    transform: scale(1.1);
+}
+
+.dish-template-title {
+    font-weight: bold;
+    font-size: 16px;
+}
+
 .dish-template-subtitle {
     display: block;
 }
-.dish-template-image-button {
-    display: none;
-}
+
 .dish-template-image-button-div {
     margin-block: 8px;
     display: flex;
-    gap: 16px;
+    flex-wrap: wrap;
+    gap: 8px;
     align-items: center;
 }
+
+.take-pic-button, .select-pic-button, .remove-image-button {
+    padding: 6px 10px;
+    font-size: 14px;
+    border-radius: 6px;
+    transition: background-color 0.2s ease;
+}
+
+.take-pic-button:hover, .select-pic-button:hover {
+    background-color: #f0f0f0;
+}
+
+.remove-image-button {
+    color: #e53935;
+    border-color: #e53935;
+}
+
+.remove-image-button:hover {
+    background-color: #ffebee;
+}
+
 .dish-template-image-preview {
-    width: 48px;
-    height: 48px;
-    object-fit: contain;
+    max-width: 100%;
+    max-height: 150px;
+    margin-top: 10px;
+    border-radius: 8px;
+    object-fit: cover;
+    display: block;
 }
 
 .dish-template-star {
     width: 24px;
     cursor: pointer;
     margin-left: auto;
+    transition: transform 0.2s ease;
 }
+
+.dish-template-star:hover {
+    transform: scale(1.1);
+}
+
 .dish-template-star.favourite {
-    background-color: yellow;
+    /* Remove background and keep only filter for yellow effect */
+    filter: invert(88%) sepia(61%) saturate(1000%) hue-rotate(330deg) brightness(105%) contrast(101%);
+    filter: invert(75%) sepia(90%) saturate(1000%) hue-rotate(350deg) brightness(100%) contrast(105%); /* Approximate yellow color */
+    /* Removed background-color and border-radius */
 }
 
 .dish-template-recipie-div {
@@ -349,15 +610,45 @@ button, .custom-file-upload {
     align-items: center;
     gap: 8px;
 }
+
 .dish-template-recipie-link {
     width: 100%;
 }
+
 .dish-template-footer {
     display: flex;
     justify-content: space-between;
+    margin-top: 8px;
+    padding-top: 12px;
+    border-top: 1px solid #f0f0f0;
 }
+
 .delete-dish-button, .save-dish-button {
     cursor: pointer;
+    padding: 8px 16px;
+    border-radius: 6px;
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+
+.delete-dish-button {
+    color: #e53935;
+    border: 1px solid #e53935;
+    background-color: white;
+}
+
+.delete-dish-button:hover {
+    background-color: #ffebee;
+}
+
+.save-dish-button {
+    color: white;
+    background-color: #FFB0B0;
+    border: 1px solid #FFB0B0;
+}
+
+.save-dish-button:hover {
+    background-color: #ff9e9e;
 }
 
 /* Lasteindikatorer */
@@ -412,25 +703,25 @@ button, .custom-file-upload {
     margin-top: 20px;
 }
 
-/* Bildehåndtering */
-.dish-template-image-preview {
-    max-width: 100%;
-    max-height: 200px;
-    margin-top: 10px;
-    border-radius: 8px;
-    display: block;
-}
-
 /* Forbedret responsivt design */
 @media (max-width: 768px) {
     .dishes {
-        grid-template-columns: 1fr;
+        padding: 8px 4px;
+    }
+    
+    .dish {
+        max-width: 100%;
+        height: 350px;
+        margin: 0 4px;
+    }
+    
+    .dish-header {
+        padding: 12px;
     }
     
     .dish-template {
         width: 90%;
         margin: 0 auto;
-        left: 5%;
         right: 5%;
     }
     
@@ -457,4 +748,73 @@ button, .custom-file-upload {
     .dish {
         width: 350px;
     }
+}
+
+.logout-button {
+    background-color: white;
+    color: #666;
+    border: 1px solid white;
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 14px;
+}
+
+.user-div {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.user-div p.username {
+    color: white;
+    font-weight: 500;
+}
+
+/* Update the signup-div to show properly */
+.signup-div {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.signup-div.hide {
+    display: none;
+}
+
+/* Fix some filter styles that might have been lost */
+.filter-search-div-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+}
+
+.filter-arrow {
+    width: 16px;
+    transition: transform 0.35s ease;
+}
+
+.filter-arrow.rotated {
+    transform: rotate(90deg);
+}
+
+.filter-div {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.filter-div.hide {
+    display: none;
+}
+
+.filter-options-div {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+/* Missing hover state on dish icons */
+.dish-star-div:hover, .dish-recipie-div:hover {
+    transform: scale(1.1);
 }

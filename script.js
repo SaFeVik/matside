@@ -63,7 +63,7 @@ document.querySelector('.signup-name').addEventListener('keydown', async (e) => 
 });
 
 async function loginState() {
-    if (localStorage.user != "null") {
+    if (localStorage.user && localStorage.user !== "null" && localStorage.user !== "undefined") {
         await showDishes()
         console.log("Logger inn")
         document.querySelector('.username').innerHTML = localStorage.user
@@ -77,7 +77,6 @@ async function loginState() {
         document.querySelector(".login-div").classList.remove('hide')
         document.querySelector("main").classList.add('hide')
     }
-
 }
 
 document.querySelector(".logout-button").addEventListener('click', () => {
@@ -364,8 +363,9 @@ async function showDishes(filter) {
             dishDiv.setAttribute('data-dish-id', dish.id);
             dishDiv.setAttribute('data-dish-meat', dish.meat);
 
-            // Hvis dish.image er satt og ikke er fallback-verdien, bruk den. Ellers benytt standard-bildesti.
-            const dishImage = dish.image && dish.image !== "Bildesti" ? dish.image : "./images/rett.jpg";
+            const dishImageStyle = dish.image && dish.image !== "Bildesti" 
+                ? `background-image: url('${dish.image}');` 
+                : ``;
 
             dishDiv.innerHTML = `
                 <div class="dish-header">
@@ -380,7 +380,7 @@ async function showDishes(filter) {
                         ${dish.subtitle}
                     </div>
                 </div>
-                <div class="dish-body" style="background-image: url('${dishImage}');">
+                <div class="dish-body" style="${dishImageStyle}">
                     <div class="dish-type">${dish.type}</div>
                     <div class="dish-star-div ${dish.favourite ? 'favourite' : ''}">
                         <img src="images/star.svg" class="dish-star ${dish.favourite ? 'favourite' : ''}">
@@ -394,9 +394,34 @@ async function showDishes(filter) {
             `;
 
             dishesContainer.appendChild(dishDiv);
+
+            // Setup subtitle expansion
+            const subtitleEl = dishDiv.querySelector('.dish-subtitle');
+            
+            // Use requestAnimationFrame to ensure layout is calculated before checking height
+            requestAnimationFrame(() => {
+                const isClamped = subtitleEl.scrollHeight > subtitleEl.clientHeight;
+                
+                if (isClamped) {
+                    subtitleEl.classList.add('is-clamped');
+                    subtitleEl.style.cursor = 'pointer';
+                    subtitleEl.onclick = () => {
+                        subtitleEl.classList.toggle('expanded');
+                        // After toggling, re-evaluate cursor based on expanded state
+                        if (subtitleEl.classList.contains('expanded')) {
+                            subtitleEl.style.cursor = 'default'; 
+                        } else {
+                            subtitleEl.style.cursor = 'pointer';
+                        }
+                    };
+                } else {
+                    subtitleEl.classList.remove('is-clamped');
+                    subtitleEl.style.cursor = 'default';
+                    subtitleEl.onclick = null; // Remove listener if not clamped
+                }
+            });
         });
 
-        // Eksempel på hvordan du kan legge til event listeners til .dish-edit knappene om du ønsker redigeringsfunksjonalitet
         document.querySelectorAll('.dish-edit').forEach(editButton => {
             editButton.addEventListener('click', handleEditClick);
         });
@@ -435,20 +460,45 @@ async function changeTemplateValues(title="", subtitle="", meat="kjøtt", recipi
 document.querySelector('.delete-dish-button').addEventListener('click', async () => {
     console.log("Starter sletting av matrett...");
     if (editingDishId !== "null") {
+        // Determine the correct path to delete. Prioritize dishImagePath if available (new upload during edit)
+        // otherwise use currentDishImagePath (existing image path when edit started).
         const imagePathToDelete = dishImagePath || currentDishImagePath;
-        if (imagePathToDelete) {
-            console.log("Sletter tilknyttet bilde med sti:", imagePathToDelete);
-            deleteObject(ref(storage, imagePathToDelete))
-                .then(() => console.log("Bilde slettet ved matrett-sletting."))
-                .catch(err => console.error("Feil ved sletting av bilde ved fjerning av matrett:", err));
+        
+        if (imagePathToDelete && imagePathToDelete !== "Bildesti") { // Ensure we have a valid path
+            console.log("Prøver å slette tilknyttet bilde med sti:", imagePathToDelete);
+            try {
+                await deleteObject(ref(storage, imagePathToDelete));
+                console.log("Bilde slettet fra Storage.");
+            } catch (err) {
+                 // Check if the error is 'object-not-found'
+                 if (err.code === 'storage/object-not-found') {
+                    console.warn("Bildet fantes ikke i Storage (muligens allerede slettet?):", imagePathToDelete);
+                 } else {
+                    // Log other potential errors
+                    console.error("Feil ved sletting av bilde fra Storage:", err);
+                 }
+            }
+        } else {
+            console.log("Ingen gyldig bildesti funnet for sletting.");
         }
-        await deleteDish(editingDishId);
-        console.log("Matrett slettet.");
+
+        // Proceed to delete the dish data from Firestore regardless of image deletion result
+        try {
+            await deleteDish(editingDishId);
+            console.log("Matrett slettet fra Firestore.");
+            dishTemplateEl.classList.add('hide'); // Hide the edit window after successful deletion
+            await showDishes(); // Refresh the dish list
+        } catch (firestoreError) {
+            console.error("Feil ved sletting av matrett fra Firestore:", firestoreError);
+            // Optionally, inform the user that the dish couldn't be deleted
+            alert("Kunne ikke slette matretten. Prøv igjen.");
+        }
+
     } else {
+        // If not in editing mode (e.g., template was opened for adding, then delete clicked), just hide the template
         dishTemplateEl.classList.add('hide');
-        console.log("Ingen matrett redigeringsmodus, skjuler malen.");
+        console.log("Ingen matrett i redigeringsmodus, skjuler malen.");
     }
-    await showDishes();
 })
 
 // Denne funksjonen henter alle brukere fra "users"-samlingen og bygger filterlisten dynamisk.
@@ -477,6 +527,11 @@ async function loadFilterUsers() {
 
 // Kall funksjonen når DOM-en er helt lastet inn
 window.addEventListener('DOMContentLoaded', () => {
+    // Initialiser localStorage.user hvis det ikke finnes
+    if (!localStorage.user) {
+        localStorage.user = "null";
+    }
+    
     // Initialiser filterbrukere
     loadFilterUsers();
     
@@ -496,18 +551,16 @@ document.querySelector('#search-input').addEventListener('keydown', (e) => {
 async function performSearch() {
     const searchTerm = document.querySelector('#search-input').value.toLowerCase().trim();
     if (searchTerm === '') {
-        await showDishes(); // Vis alle retter hvis søkefeltet er tomt
+        await showDishes();
         return;
     }
     
-    // Hent alle retter først, og filter lokalt
     const allDishes = await getDishes();
     const filteredDishes = allDishes.filter(dish => 
         dish.title.toLowerCase().includes(searchTerm) || 
         dish.subtitle.toLowerCase().includes(searchTerm)
     );
     
-    // Vis resultatet
     const dishesContainer = document.querySelector('.dishes');
     dishesContainer.innerHTML = "";
     
@@ -516,15 +569,15 @@ async function performSearch() {
         return;
     }
     
-    // Vis de filtrerte rettene
     filteredDishes.forEach(dish => {
         const dishDiv = document.createElement('div');
         dishDiv.className = 'dish';
         dishDiv.setAttribute('data-dish-id', dish.id);
         dishDiv.setAttribute('data-dish-meat', dish.meat);
 
-        // Hvis dish.image er satt og ikke er fallback-verdien, bruk den. Ellers benytt standard-bildesti.
-        const dishImage = dish.image && dish.image !== "Bildesti" ? dish.image : "./images/rett.jpg";
+        const dishImageStyle = dish.image && dish.image !== "Bildesti" 
+            ? `background-image: url('${dish.image}');` 
+            : ``;
 
         dishDiv.innerHTML = `
             <div class="dish-header">
@@ -539,7 +592,7 @@ async function performSearch() {
                     ${dish.subtitle}
                 </div>
             </div>
-            <div class="dish-body" style="background-image: url('${dishImage}');">
+            <div class="dish-body" style="${dishImageStyle}">
                 <div class="dish-type">${dish.type}</div>
                 <div class="dish-star-div ${dish.favourite ? 'favourite' : ''}">
                     <img src="images/star.svg" class="dish-star ${dish.favourite ? 'favourite' : ''}">
@@ -553,9 +606,34 @@ async function performSearch() {
         `;
 
         dishesContainer.appendChild(dishDiv);
+
+        // Setup subtitle expansion for search results
+        const subtitleEl = dishDiv.querySelector('.dish-subtitle');
+        
+        // Use requestAnimationFrame to ensure layout is calculated before checking height
+        requestAnimationFrame(() => {
+            const isClamped = subtitleEl.scrollHeight > subtitleEl.clientHeight;
+
+            if (isClamped) {
+                subtitleEl.classList.add('is-clamped');
+                subtitleEl.style.cursor = 'pointer';
+                 subtitleEl.onclick = () => {
+                     subtitleEl.classList.toggle('expanded');
+                     // After toggling, re-evaluate cursor based on expanded state
+                      if (subtitleEl.classList.contains('expanded')) {
+                         subtitleEl.style.cursor = 'default'; 
+                     } else {
+                         subtitleEl.style.cursor = 'pointer';
+                     }
+                 };
+            } else {
+                subtitleEl.classList.remove('is-clamped');
+                subtitleEl.style.cursor = 'default';
+                subtitleEl.onclick = null; // Remove listener if not clamped
+            }
+        });
     });
     
-    // Legg til edit-funksjonalitet også til de søkte rettene
     document.querySelectorAll('.dish-edit').forEach(editButton => {
         editButton.addEventListener('click', handleEditClick);
     });
