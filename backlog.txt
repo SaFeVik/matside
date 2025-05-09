@@ -1,18 +1,8 @@
-Lag en boks med alle funksjoner *
-    favoritt *
-    brukernavn *
-    kjøtt, fisk, kylling, vegetar *
-    middag, lunsj, frokost, dessert *
-    oppskriftlink *
-
-legg til boks
-Hente inn alle bokser og vis på siden
-Rediger boks
-Slett boks (inne på rediger)
-Prøv lykken
-
-Når siden lastes inn skal loadDishes() hente inn data fra databasen og lage elementer. Den skal ha parameter sort som bestemmer hvordan ting skal sorteres.
-Trykk på legg til rett skal automatisk lage en rett med tomme verdier. Når man trykker på lagre skal verdiene legges til. Trykker man på slett skal den slettes. 
-Trykk på rediger -> funksjon som. 
-
-Man kan filtrere personer, type, kjøtt, favoritt
+1. Når man redigerer eller legger til ny rett skal det stå brukerens navn på toppen og ikke "Felix Vikeren Vik".
+2. Det skal være et lite område når man redigerer eller legger til ny rett hvor man kan dra over et bilde. Sånn "drag and drop".
+3. Til høyre for "kjøttype"-ikonet skal det være et annet ikon. Det viser enda en type: pasta, nudler, ris, gryte, bowl, eller la stå tomt (her tenkter jeg å legge til flere alternativer etterhvert). Det skal være samme stil som "kjøttype"-ikonet.
+4. Under rettype skal det stå vanskelighetsgrad i form av 1-3 knivikoner. Dette kan man også velge i redigeringsvinduet.
+5. Rettene skal inneholde informasjon om dato og tid de ble lagt til, til høyre for navnet på toppen av redigeringsvinduet.
+6. Man skal kunne, i tillegg til å filtrere, sortere etter dato lagt til eldst eller nyest.
+7. Det er en greie på mobil som gjør slik at når man er ferdig i redigeringsvinduet må man zoome ut igjen. Kan du passe på slik at dette ikke skjer?
+8. I tillegg vil jeg at designet på dropdown-menyene skal være lik som på PC. Det ser du på bildene. 

@@ -86,7 +86,8 @@ main.hide {
     flex-direction: column;
     align-items: center;
     gap: 12px;
-    width: 350px;
+    width: 90%;
+    max-width: 768px;
     margin: 0 auto;
     margin-bottom: 16px;
     margin-top: 16px;
@@ -148,12 +149,13 @@ main.hide {
 
 /* FILTER */
 .filter-search-div {
+    max-width: 768px;
+    width: 100%;
     background-color: white;
     display: flex;
     flex-direction: column;
     gap: 12px;
     padding: 16px;
-    width: 350px;
     box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
     margin-top: 8px;
     border-radius: 12px;
@@ -359,11 +361,39 @@ button:hover {
     background-size: 64px 64px;
 }
 
-/* Type indicator styles */
-.dish-type {
+/* THIS IS THE NEW RULE FOR THE SVG PLACEHOLDER */
+.dish-body.no-image-present {
+    background-color: #f9f9f9;
+    background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="%23e0e0e0"><path d="M12,3C7.03,3 3,7.03 3,12C3,16.97 7.03,21 12,21C16.97,21 21,16.97 21,12C21,7.03 16.97,3 12,3M12,5C13.1,5 14,5.9 14,7C14,8.1 13.1,9 12,9C10.9,9 10,8.1 10,7C10,5.9 10.9,5 12,5M17,15C15.9,15 15,14.1 15,13C15,11.9 15.9,11 17,11C18.1,11 19,11.9 19,13C19,14.1 18.1,15 17,15M7,15C5.9,15 5,14.1 5,13C5,11.9 5.9,11 7,11C8.1,11 9,11.9 9,13C9,14.1 8.1,15 7,15Z"/></svg>');
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: 64px 64px; /* Or adjust size as needed */
+}
+
+.dish-image { /* New style for the image tag */
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block; /* Optional: removes any extra space if display was inline */
+    position: absolute; /* Make it part of the absolute positioning context like other elements in dish-body */
+    top: 0;
+    left: 0;
+}
+
+/* New wrapper for top-left indicators */
+.dish-top-left-indicators {
     position: absolute;
     top: 12px;
     left: 12px;
+    display: flex;
+    align-items: center; /* Vertically align items if they have different heights */
+    gap: 6px; /* Space between dish-type bubble and difficulty bubble */
+    z-index: 2; /* Ensure it's on top */
+}
+
+/* Type indicator styles - remove absolute positioning */
+.dish-type {
+    /* position: absolute; top: 12px; left: 12px; (Removed) */
     background-color: rgba(255, 255, 255, 0.85);
     padding: 4px 10px;
     border-radius: 20px;
@@ -372,42 +402,70 @@ button:hover {
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
 }
 
-/* Meat type indicator (badge in bottom left) */
-.dish::before {
-    content: '';
+.dish-bottom-left-icons {
     position: absolute;
     bottom: 12px;
     left: 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    z-index: 2; /* Ensure it's above dish image if there are overlaps */
+}
+
+.dish-bottom-left-icons img.icon-meat,
+.dish-bottom-left-icons img.icon-subtype {
     width: 24px;
     height: 24px;
+    padding: 4px; /* Optional padding if icons have their own bg */
+    background-color: rgba(255, 255, 255, 0.85); /* Similar to old ::before */
     border-radius: 50%;
-    background-size: 60%;
-    background-position: center;
-    background-repeat: no-repeat;
-    background-color: rgba(255, 255, 255, 0.85);
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-    z-index: 2;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
 }
 
-/* Meat type colors */
-.dish[data-dish-meat="kjøtt"]::before {
+/* Colors for meat icon backgrounds */
+.dish[data-dish-meat="kjøtt"] .icon-meat {
     background-color: #FFCDD2; /* Light red for meat */
-    background-image: url('./images/meat.svg');
 }
-
-.dish[data-dish-meat="fisk"]::before {
+.dish[data-dish-meat="fisk"] .icon-meat {
     background-color: #BBDEFB; /* Light blue for fish */
-    background-image: url('./images/fish.svg');
 }
-
-.dish[data-dish-meat="kylling"]::before {
+.dish[data-dish-meat="kylling"] .icon-meat {
     background-color: #FFE0B2; /* Light orange for chicken */
-    background-image: url('./images/chicken.svg');
+}
+.dish[data-dish-meat="vegetar"] .icon-meat {
+    background-color: #C8E6C9; /* Light green for vegetarian */
 }
 
-.dish[data-dish-meat="vegetar"]::before {
-    background-color: #C8E6C9; /* Light green for vegetarian */
-    background-image: url('./images/vegetable.svg');
+/* Colors for subtype icon backgrounds */
+.dish[data-dish-subtype="pasta"] .icon-subtype {
+    background-color: #FFF9C4; /* Light yellow for pasta */
+}
+.dish[data-dish-subtype="ris"] .icon-subtype {
+    background-color: #F5F5F5; /* Light grey for rice */
+}
+.dish[data-dish-subtype="nudler"] .icon-subtype {
+    background-color: #FFE4B5; /* Moccasin for noodles */
+}
+.dish[data-dish-subtype="gryte"] .icon-subtype {
+    background-color: #FFCCBC; /* Light peach for gryte (stew) */
+}
+.dish[data-dish-subtype="bowl"] .icon-subtype {
+    background-color: #D1C4E9; /* Light purple for bowl */
+}
+
+/* Adjust .dish-difficulty if it becomes a direct child of the flex container */
+.dish-difficulty {
+    /* position: absolute; bottom: 12px; left: 12px; (Removed if it is part of flex) */
+    display: flex; /* It already is flex, which is good */
+    gap: 4px;
+    /* Add other styles if needed, e.g., background if not on individual knives */
+}
+
+.dish-difficulty .knife-icon {
+    /* font-size is used for emoji, width/height for img */
+    font-size: 18px; /* Or adjust if using img */
+    color: #333; /* Color for the knife emoji if not using selected state color */
+    /* remove width/height if using emoji and font-size controls it */
 }
 
 .dish-star-div {
@@ -423,19 +481,20 @@ button:hover {
     border-radius: 50%;
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
     transition: transform 0.2s ease;
+    cursor: pointer;
 }
 
 .dish-star-div:hover {
     transform: scale(1.1);
 }
 
-.dish-star-div.favourite {
-    background-color: rgb(255, 245, 98);
-}
+/* .dish-star-div.favourite { (Commented out as SVG now handles yellow color) */
+/*    background-color: rgb(255, 245, 98); */
+/* } */
 
 .dish-star {
-    width: 18px;
-    height: 18px;
+    width: 20px;
+    height: 20px;
 }
 
 .dish-recipie-div {
@@ -471,7 +530,9 @@ button:hover {
 
 /* TEMPLATE */
 .dish-template {
-    width: 350px;
+    max-width: 768px;
+    width: 90%;
+    margin: 0 auto;
     background-color: white;
     position: fixed;
     z-index: 1000;
@@ -501,13 +562,30 @@ button:hover {
     }
 }
 
-.dish-template input, .dish-template select {
+.dish-template input, .dish-template select, #sort-select {
     padding: 8px 12px;
     outline: none;
     border: 1px solid #ddd;
     border-radius: 6px;
-    font-size: 14px;
+    font-size: 16px;
     transition: border-color 0.2s ease;
+    background-color: white;
+    color: #333;
+    width: 100%;
+    height: 40px;
+    line-height: normal;
+    cursor: pointer;
+}
+
+.dish-template select {
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23666666%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.4-5.4-13z%22%2F%3E%3C%2Fsvg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    background-size: 10px 10px;
+    padding-right: 30px;
 }
 
 .dish-template input:focus, .dish-template select:focus {
@@ -530,6 +608,25 @@ button:hover {
 .dish-template-user {
     font-size: 14px;
     color: #666;
+    font-weight: bold;
+}
+
+.dish-template-created-at {
+    font-size: 12px; /* Base size for the container */
+    color: #666;    /* Base color for the date part */
+    margin-left: auto;
+    padding-right: 10px;
+    white-space: nowrap; /* Prevent wrapping if space is tight */
+}
+
+.timestamp-date {
+    /* Inherits color and base size from parent */
+}
+
+.timestamp-time {
+    color: #999;     /* Lighter color for time */
+    font-size: 0.9em; /* Slightly smaller relative to parent */
+    margin-left: 5px; /* Space between date and time */
 }
 
 .dish-template-x {
@@ -588,7 +685,7 @@ button:hover {
 }
 
 .dish-template-star {
-    width: 24px;
+    width: 28px;
     cursor: pointer;
     margin-left: auto;
     transition: transform 0.2s ease;
@@ -598,12 +695,9 @@ button:hover {
     transform: scale(1.1);
 }
 
-.dish-template-star.favourite {
-    /* Remove background and keep only filter for yellow effect */
-    filter: invert(88%) sepia(61%) saturate(1000%) hue-rotate(330deg) brightness(105%) contrast(101%);
-    filter: invert(75%) sepia(90%) saturate(1000%) hue-rotate(350deg) brightness(100%) contrast(105%); /* Approximate yellow color */
-    /* Removed background-color and border-radius */
-}
+/* .dish-template-star.favourite { (Commented out as SVG now handles yellow color) */
+    /* filter: invert(75%) sepia(90%) saturate(1000%) hue-rotate(350deg) brightness(100%) contrast(105%); */
+/* } */
 
 .dish-template-recipie-div {
     display: flex;
@@ -722,16 +816,12 @@ button:hover {
     .dish-template {
         width: 90%;
         margin: 0 auto;
-        right: 5%;
+        left: 50%;
+        transform: translate(-50%, -50%) scale(1);
     }
     
     .filter-search-div {
-        flex-direction: column;
-    }
-    
-    .filter-search-div-top {
-        flex-direction: column;
-        align-items: flex-start;
+        width: 100%;
     }
     
     .search-div {
@@ -741,6 +831,14 @@ button:hover {
     
     .search-div input {
         width: 70%;
+    }
+
+    .top-div {
+        width: 95%;
+    }
+
+    .filter-search-div-top {
+        gap: 8px;
     }
 }
 
@@ -817,4 +915,170 @@ button:hover {
 /* Missing hover state on dish icons */
 .dish-star-div:hover, .dish-recipie-div:hover {
     transform: scale(1.1);
+}
+
+.card-knife-icon {
+    width: 16px;  /* SVG size */
+    height: 16px; /* SVG size */
+    /* Explicitly ensure no individual background, padding, or shadow here */
+    background-color: transparent !important; 
+    padding: 0 !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    /* Optional: filter to adjust SVG color if needed on white background */
+    /* filter: invert(15%) sepia(0%) saturate(0%) hue-rotate(0deg) brightness(40%) contrast(100%); */ 
+}
+
+/* Adjust .dish-difficulty-display if it needs more top margin */
+/* The rule .dish-difficulty-display should ALREADY be defined above this with correct bubble styling */
+/* We can re-affirm its top position if needed, e.g. ensure it has enough space from .dish-type */
+/* .dish-difficulty-display { top: 44px; } /* Example: slightly more space */
+
+
+/* Meat type colors (now targets .icon-meat img) */
+.dish-bottom-left-icons {
+    position: absolute;
+    bottom: 12px;
+    left: 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    z-index: 2; /* Ensure it's above dish image if there are overlaps */
+}
+
+.dish-bottom-left-icons img.icon-meat,
+.dish-bottom-left-icons img.icon-subtype {
+    width: 24px;
+    height: 24px;
+    padding: 4px; /* Optional padding if icons have their own bg */
+    background-color: rgba(255, 255, 255, 0.85); /* Similar to old ::before */
+    border-radius: 50%;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+/* Colors for meat icon backgrounds */
+.dish[data-dish-meat="kjøtt"] .icon-meat {
+    background-color: #FFCDD2; /* Light red for meat */
+}
+.dish[data-dish-meat="fisk"] .icon-meat {
+    background-color: #BBDEFB; /* Light blue for fish */
+}
+.dish[data-dish-meat="kylling"] .icon-meat {
+    background-color: #FFE0B2; /* Light orange for chicken */
+}
+.dish[data-dish-meat="vegetar"] .icon-meat {
+    background-color: #C8E6C9; /* Light green for vegetarian */
+}
+
+/* Colors for subtype icon backgrounds */
+.dish[data-dish-subtype="pasta"] .icon-subtype {
+    background-color: #FFF9C4; /* Light yellow for pasta */
+}
+.dish[data-dish-subtype="ris"] .icon-subtype {
+    background-color: #F5F5F5; /* Light grey for rice */
+}
+.dish[data-dish-subtype="nudler"] .icon-subtype {
+    background-color: #FFE4B5; /* Moccasin for noodles */
+}
+.dish[data-dish-subtype="gryte"] .icon-subtype {
+    background-color: #FFCCBC; /* Light peach for gryte (stew) */
+}
+.dish[data-dish-subtype="bowl"] .icon-subtype {
+    background-color: #D1C4E9; /* Light purple for bowl */
+}
+
+.difficulty-knife {
+    cursor: pointer;
+    width: 28px; /* Adjust SVG size as needed for the template */
+    height: 28px; /* Adjust SVG size as needed for the template */
+    opacity: 0.5; /* Unselected knives are less prominent */
+    transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.difficulty-knife:hover {
+    opacity: 0.7;
+    transform: scale(1.1);
+}
+
+.difficulty-knife.selected {
+    opacity: 1.0; /* Selected knives are fully opaque */
+    transform: scale(1.1); /* Slightly larger when selected */
+    /* Optionally, add a more distinct filter if needed, e.g.: */
+    /* filter: drop-shadow(0 0 2px #FFB0B0); */
+}
+
+/* styles for dish card difficulty display */
+.dish-difficulty-display {
+    /* position: absolute; top: 42px; left: 12px; (Removed) */
+    display: flex; 
+    gap: 4px;     
+    padding: 6px 8px; 
+    background-color: rgba(255, 255, 255, 0.85); 
+    border-radius: 20px; 
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1); 
+    /* z-index: 2; (Handled by parent) */
+}
+
+.card-knife-icon {
+    color: #ffdd00;
+    width: 16px;  /* SVG size */
+    height: 16px; /* SVG size */
+    padding: 3px; /* Space inside the blob, around the SVG */
+    background-color: rgba(255, 255, 255, 0.85); /* White blob background */
+    border-radius: 50%; /* Make it circular */
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1); /* Subtle shadow like other icons */
+    /* Optional: if your SVG needs a specific color fill to be visible on white */
+    /* filter: invert(10%) sepia(0%) saturate(100%) hue-rotate(0deg) brightness(20%) contrast(100%); */ /* Example: darkens the SVG */
+}
+
+/* Meat type colors (now targets .icon-meat img) */
+.dish-bottom-left-icons {
+    position: absolute;
+    bottom: 12px;
+    left: 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    z-index: 2; /* Ensure it's above dish image if there are overlaps */
+}
+
+.dish-bottom-left-icons img.icon-meat,
+.dish-bottom-left-icons img.icon-subtype {
+    width: 24px;
+    height: 24px;
+    padding: 4px; /* Optional padding if icons have their own bg */
+    background-color: rgba(255, 255, 255, 0.85); /* Similar to old ::before */
+    border-radius: 50%;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+/* Colors for meat icon backgrounds */
+.dish[data-dish-meat="kjøtt"] .icon-meat {
+    background-color: #FFCDD2; /* Light red for meat */
+}
+.dish[data-dish-meat="fisk"] .icon-meat {
+    background-color: #BBDEFB; /* Light blue for fish */
+}
+.dish[data-dish-meat="kylling"] .icon-meat {
+    background-color: #FFE0B2; /* Light orange for chicken */
+}
+.dish[data-dish-meat="vegetar"] .icon-meat {
+    background-color: #C8E6C9; /* Light green for vegetarian */
+}
+
+/* Colors for subtype icon backgrounds */
+.dish[data-dish-subtype="pasta"] .icon-subtype {
+    background-color: #FFF9C4; /* Light yellow for pasta */
+}
+.dish[data-dish-subtype="ris"] .icon-subtype {
+    background-color: #F5F5F5; /* Light grey for rice */
+}
+.dish[data-dish-subtype="nudler"] .icon-subtype {
+    background-color: #FFE4B5; /* Moccasin for noodles */
+}
+.dish[data-dish-subtype="gryte"] .icon-subtype {
+    background-color: #FFCCBC; /* Light peach for gryte (stew) */
+}
+.dish[data-dish-subtype="bowl"] .icon-subtype {
+    background-color: #D1C4E9; /* Light purple for bowl */
 }

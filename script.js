@@ -1,6 +1,6 @@
 import { isUser, makeUser } from './auth.js';
 import { getDishes, addDish, updateDish, deleteDish } from './foodManager.js'
-import { collection, getDocs } from 'https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js';
+import { collection, getDocs, query, where } from 'https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js';
 import { db } from './firebase.js';
 import { ref, uploadBytes, getDownloadURL, deleteObject } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-storage.js";
 import { storage } from './firebase.js';
@@ -14,6 +14,12 @@ const dishTypeInput = dishTemplateEl.querySelector('.dish-template-type');
 const dishImageButtonInput = dishTemplateEl.querySelector('.dish-template-image-button');
 const imagePreviewImg = dishTemplateEl.querySelector('.dish-template-image-preview');
 const favouriteInput = dishTemplateEl.querySelector('.dish-template-star');
+const dishTemplateUserEl = dishTemplateEl.querySelector('.dish-template-user');
+const imageDropZoneEl = dishTemplateEl.querySelector('.dish-template-image-drop-zone');
+const dishSubtypeInput = dishTemplateEl.querySelector('.dish-template-subtype');
+const difficultyKnivesEl = dishTemplateEl.querySelectorAll('.difficulty-knife');
+let currentDifficulty = 0;
+const dishTemplateCreatedAtEl = dishTemplateEl.querySelector('.dish-template-created-at');
 
 const takePicInput = document.querySelector('.dish-template-image-button-take');
 const selectPicInput = document.querySelector('.dish-template-image-button-select');
@@ -64,18 +70,28 @@ document.querySelector('.signup-name').addEventListener('keydown', async (e) => 
 
 async function loginState() {
     if (localStorage.user && localStorage.user !== "null" && localStorage.user !== "undefined") {
-        await showDishes()
         console.log("Logger inn")
         document.querySelector('.username').innerHTML = localStorage.user
         document.querySelector('.user-div').classList.remove('hide')
         document.querySelector(".login-div").classList.add('hide')
         document.querySelector("main").classList.remove('hide')
+
+        // Last inn brukerpreferanser og vis retter
+        const { filter, sortOrder, searchTerm } = loadAndApplyUserPreferences();
+        await showDishes(filter, sortOrder, searchTerm);
+
     } else {
         document.querySelector('.dishes').innerHTML = ""
         console.log("Logger ut")
+        document.querySelector('.username').innerHTML = "";
         document.querySelector('.user-div').classList.add('hide')
         document.querySelector(".login-div").classList.remove('hide')
         document.querySelector("main").classList.add('hide')
+
+        // Tøm lagrede preferanser ved utlogging
+        localStorage.removeItem('maritaUserFilter');
+        localStorage.removeItem('maritaUserSortOrder');
+        localStorage.removeItem('maritaUserSearchTerm');
     }
 }
 
@@ -95,7 +111,17 @@ document.querySelectorAll('.option').forEach(option => {
     })
 })
 
+// --- SORT OPTION SELECTION LOGIC --- (This block can be removed as we now use a select dropdown)
+/*
+document.querySelectorAll('.sort-date .sort-option').forEach(option => {
+    option.addEventListener('click', (e) => {
+        // ... (old logic) ...
+    });
+});
+*/
+
 // Event listener for filter-knappen som bygger filter-objektet basert på hvilke filtere som er "checked"
+// This button will be renamed to "Søk" and will handle both filtering and searching
 document.querySelector('#filter-button').addEventListener('click', async () => {
     const filter = {};
 
@@ -127,29 +153,97 @@ document.querySelector('#filter-button').addEventListener('click', async () => {
         filter.meat = checkedMeats;
     }
 
+    // Subtype-filter: (Endret logikk herfra)
+    const subtypeNodes = document.querySelectorAll('.filter-subtype .option');
+    const tempCheckedSubtypes = [];
+    let tempIncludeNoSubtype = false;
+    let isIngenKategoriPresentInOptions = false;
+
+    subtypeNodes.forEach(node => {
+        const nodeText = node.textContent.trim().toLowerCase();
+        if (nodeText === 'ingen kategori') {
+            isIngenKategoriPresentInOptions = true;
+            if (node.classList.contains('checked')) {
+                tempIncludeNoSubtype = true;
+            }
+        } else if (node.classList.contains('checked')) {
+            tempCheckedSubtypes.push(nodeText);
+        }
+    });
+
+    let numActualSubtypeOptions = subtypeNodes.length;
+    if (isIngenKategoriPresentInOptions) {
+        numActualSubtypeOptions--;
+    }
+    // Sikrer at numActualSubtypeOptions ikke er negativ, selv om det ikke bør skje.
+    if (numActualSubtypeOptions < 0) numActualSubtypeOptions = 0; 
+
+    if (tempIncludeNoSubtype) {
+        filter.includeNoSubtype = true;
+        // Hvis "ingen kategori" er krysset av, og det også er andre kategorier krysset av,
+        // skal disse andre kategoriene også med i filteret.
+        if (tempCheckedSubtypes.length > 0) {
+            filter.subtype = tempCheckedSubtypes;
+        }
+    } else {
+        // "ingen kategori" er IKKE krysset av.
+        // Bruk subtype-filteret kun hvis noen, men ikke ALLE, faktiske kategorier er valgt.
+        if (tempCheckedSubtypes.length > 0 && tempCheckedSubtypes.length < numActualSubtypeOptions) {
+            filter.subtype = tempCheckedSubtypes;
+        }
+        // Hvis tempCheckedSubtypes.length === numActualSubtypeOptions (og "ingen kategori" ikke er valgt),
+        // betyr det at alle faktiske kategorier er valgt, så ingen filter.subtype trengs (viser alle).
+        // Hvis tempCheckedSubtypes.length === 0 (og "ingen kategori" ikke er valgt), trengs heller ikke filter.
+    }
+    // (Slutt på endret logikk for subtype)
+
     // Favoritt-filter: Dersom "Vis bare favoritter" er checked, legg til filter.favourite
     const favOption = document.querySelector('.filter-favorite .option');
     if (favOption && favOption.classList.contains('checked')) {
         filter.favourite = true;
     }
 
-    // Hent retter med filteret. Dersom filter.persons ikke sendes med, lastes alle retter inn.
-    await showDishes(filter);
+    // Get sort order from the new select dropdown
+    const sortOrder = document.getElementById('sort-select').value;
+
+    // Get search term
+    const searchTerm = document.getElementById('search-input').value.toLowerCase().trim();
+
+    // Lagre innstillinger i localStorage
+    localStorage.setItem('maritaUserFilter', JSON.stringify(filter));
+    localStorage.setItem('maritaUserSortOrder', sortOrder);
+    localStorage.setItem('maritaUserSearchTerm', searchTerm);
+
+    // Hent retter, filtrer OG søk, deretter sorter
+    await showDishes(filter, sortOrder, searchTerm); // Pass searchTerm to showDishes
+
+    // Lukk filter-div etter søk
+    document.querySelector('.filter-div').classList.add('hide');
+    document.querySelector('.filter-arrow').classList.remove('rotated');
 });
 
 /* Add dish */
 
 document.querySelector('.add-dish-button').addEventListener('click', () => {
     editingDishId = "null"
-    changeTemplateValues("")
+    changeTemplateValues("", "", "kjøtt", "", "Middag", false, "", "", localStorage.user, "", 0, "")
     dishTemplateEl.classList.remove('hide')
 })
 document.querySelector('.dish-template-x').addEventListener('click', () => {
     dishTemplateEl.classList.add('hide')
+    if (document.activeElement) {
+        document.activeElement.blur();
+    }
 })
 
 favouriteInput.addEventListener('click', () => {
-    favouriteInput.classList.toggle('favourite')
+    favouriteInput.classList.toggle('favourite');
+    // Toggle SVG source based on favourite state
+    if (favouriteInput.classList.contains('favourite')) {
+        favouriteInput.src = './images/star-filled-yellow.svg';
+    } else {
+        favouriteInput.src = './images/star-outline.svg';
+    }
 })
 
 // Globale variabler for å holde styr på bildet
@@ -299,6 +393,64 @@ selectPicButton.addEventListener('click', () => {
     selectPicInput.click();
 });
 
+// --- DRAG AND DROP IMAGE LOGIC ---
+if (imageDropZoneEl) {
+    imageDropZoneEl.addEventListener('dragover', (event) => {
+        event.preventDefault(); // Necessary to allow dropping
+        imageDropZoneEl.classList.add('dragover');
+    });
+
+    imageDropZoneEl.addEventListener('dragleave', (event) => {
+        imageDropZoneEl.classList.remove('dragover');
+    });
+
+    imageDropZoneEl.addEventListener('drop', async (event) => {
+        event.preventDefault(); // Prevent opening the file in the browser
+        imageDropZoneEl.classList.remove('dragover');
+
+        if (event.dataTransfer.files && event.dataTransfer.files.length > 0) {
+            const file = event.dataTransfer.files[0];
+            // Ensure it's an image file (optional, but good practice)
+            if (file.type.startsWith('image/')) {
+                await processImage(file);
+            } else {
+                alert("Vennligst slipp en bildefil.");
+            }
+            event.dataTransfer.clearData();
+        }
+    });
+}
+
+// --- DIFFICULTY SELECTION LOGIC ---
+difficultyKnivesEl.forEach(knife => {
+    knife.addEventListener('click', () => {
+        const value = parseInt(knife.dataset.value);
+        currentDifficulty = currentDifficulty === value ? 0 : value; // Toggle if same knife clicked, or set new value
+        updateDifficultyDisplay();
+    });
+});
+
+function updateDifficultyDisplay() {
+    difficultyKnivesEl.forEach(k => {
+        const val = parseInt(k.dataset.value);
+        if (val <= currentDifficulty) {
+            k.classList.add('selected');
+        } else {
+            k.classList.remove('selected');
+        }
+    });
+}
+
+function generateDifficultyIcons(difficulty) {
+    if (!difficulty || difficulty < 1) return '';
+    let iconsHTML = '';
+    for (let i = 0; i < difficulty; i++) {
+        // Assuming you have knife.svg in mat/images/
+        iconsHTML += `<img src="./images/knife.svg" class="card-knife-icon" alt="Difficulty">`; 
+    }
+    return iconsHTML;
+}
+
 // --- EVENTLISTENER FOR "FJERN BILDE" ---
 const removeImageButton = document.querySelector('.remove-image-button');
 if (removeImageButton) {
@@ -331,11 +483,15 @@ document.querySelector('.save-dish-button').addEventListener('click', async () =
         meat: dishMeatInput.value,
         recipieLink: dishRecipieLinkInput.value,
         type: dishTypeInput.value,
-        image: (dishImageURL || "Bildesti"),
+        subtype: dishSubtypeInput.value,
+        difficulty: currentDifficulty,
+        favourite: favourite,
+        imageUrl: dishImageURL,
         imagePath: (dishImageURL ? (dishImagePath || currentDishImagePath) : ""),
         user: localStorage.user,
-        favourite: favourite
+        createdAt: new Date().toISOString()
     };
+    
     console.log("Matrettdata som skal lagres:", dishData);
     
     if (editingDishId !== "null") {
@@ -348,109 +504,245 @@ document.querySelector('.save-dish-button').addEventListener('click', async () =
     
     await showDishes();
     dishTemplateEl.classList.add('hide');
+    if (document.activeElement) {
+        document.activeElement.blur();
+    }
 });
 
 /* Show dishes */
-async function showDishes(filter) {
+async function showDishes(filter, sortOrder, searchTerm) {
     if (localStorage.user !== "null") {
-        const dishList = await getDishes(filter);
+        let dishes = await getDishes(filter, localStorage.user); // Initial fetch with filters
+
+        // Apply search term if provided
+        if (searchTerm) {
+            dishes = dishes.filter(dish => 
+                dish.title.toLowerCase().includes(searchTerm) || 
+                dish.subtitle.toLowerCase().includes(searchTerm)
+            );
+        }
+
+        // Klientside-filter for "subtype" (add this before sorting)
+        if (filter && ( (filter.subtype && filter.subtype.length > 0) || filter.includeNoSubtype) ) {
+            dishes = dishes.filter(dish => {
+                const dishSubtypeLower = dish.subtype ? dish.subtype.toLowerCase() : null;
+                let matchesSelectedSubtype = false;
+                if (filter.subtype && filter.subtype.length > 0) {
+                    matchesSelectedSubtype = dishSubtypeLower && filter.subtype.includes(dishSubtypeLower);
+                }
+                let matchesNoSubtypeCondition = false;
+                if (filter.includeNoSubtype) {
+                    matchesNoSubtypeCondition = !dishSubtypeLower || dishSubtypeLower === '';
+                }
+                return matchesSelectedSubtype || matchesNoSubtypeCondition;
+            });
+        }
+
         const dishesContainer = document.querySelector('.dishes');
         dishesContainer.innerHTML = "";
 
-        dishList.forEach(dish => {
-            const dishDiv = document.createElement('div');
-            dishDiv.className = 'dish';
-            dishDiv.setAttribute('data-dish-id', dish.id);
-            dishDiv.setAttribute('data-dish-meat', dish.meat);
-
-            const dishImageStyle = dish.image && dish.image !== "Bildesti" 
-                ? `background-image: url('${dish.image}');` 
-                : ``;
-
-            dishDiv.innerHTML = `
-                <div class="dish-header">
-                    <div class="dish-header-top">
-                        <p class="dish-user">${dish.user}</p>
-                        <p class="dish-edit">Rediger</p>
-                    </div>
-                    <div class="dish-title">
-                        ${dish.title}
-                    </div>
-                    <div class="dish-subtitle">
-                        ${dish.subtitle}
-                    </div>
-                </div>
-                <div class="dish-body" style="${dishImageStyle}">
-                    <div class="dish-type">${dish.type}</div>
-                    <div class="dish-star-div ${dish.favourite ? 'favourite' : ''}">
-                        <img src="images/star.svg" class="dish-star ${dish.favourite ? 'favourite' : ''}">
-                    </div>
-                    <div class="dish-recipie-div">
-                        <a href="${dish.recipieLink}" target="_blank" class="dish-recipie">
-                            <img src="images/recipie.svg">
-                        </a>
-                    </div>
-                </div>
-            `;
-
-            dishesContainer.appendChild(dishDiv);
-
-            // Setup subtitle expansion
-            const subtitleEl = dishDiv.querySelector('.dish-subtitle');
-            
-            // Use requestAnimationFrame to ensure layout is calculated before checking height
-            requestAnimationFrame(() => {
-                const isClamped = subtitleEl.scrollHeight > subtitleEl.clientHeight;
-                
-                if (isClamped) {
-                    subtitleEl.classList.add('is-clamped');
-                    subtitleEl.style.cursor = 'pointer';
-                    subtitleEl.onclick = () => {
-                        subtitleEl.classList.toggle('expanded');
-                        // After toggling, re-evaluate cursor based on expanded state
-                        if (subtitleEl.classList.contains('expanded')) {
-                            subtitleEl.style.cursor = 'default'; 
-                        } else {
-                            subtitleEl.style.cursor = 'pointer';
-                        }
-                    };
-                } else {
-                    subtitleEl.classList.remove('is-clamped');
-                    subtitleEl.style.cursor = 'default';
-                    subtitleEl.onclick = null; // Remove listener if not clamped
+        // Sort dishes if sortOrder is provided
+        if (sortOrder && dishes.length > 0) {
+            dishes.sort((a, b) => {
+                switch (sortOrder) {
+                    case 'newest':
+                        if (!a.createdAt || !b.createdAt) return 0;
+                        return new Date(b.createdAt) - new Date(a.createdAt);
+                    case 'oldest':
+                        if (!a.createdAt || !b.createdAt) return 0;
+                        return new Date(a.createdAt) - new Date(b.createdAt);
+                    case 'alpha-asc':
+                        return a.title.localeCompare(b.title, 'nb', { sensitivity: 'base' });
+                    case 'alpha-desc':
+                        return b.title.localeCompare(a.title, 'nb', { sensitivity: 'base' });
+                    default:
+                        return 0;
                 }
             });
-        });
+        }
 
-        document.querySelectorAll('.dish-edit').forEach(editButton => {
-            editButton.addEventListener('click', handleEditClick);
-        });
+        // Hvis det finnes retter, legg dem til i DOM. Ellers vis melding.
+        if (dishes.length > 0) {
+            dishes.forEach(dish => {
+                const dishEl = document.createElement('div');
+                dishEl.classList.add('dish');
+                dishEl.dataset.dishId = dish.id;
+                if (dish.meat) {
+                    dishEl.dataset.dishMeat = dish.meat.toLowerCase();
+                }
+                if (dish.subtype) {
+                    dishEl.dataset.dishSubtype = dish.subtype.toLowerCase();
+                }
+
+                // Icon mappings
+                const meatIconMap = {
+                    'kjøtt': './images/meat.svg',
+                    'fisk': './images/fish.svg',
+                    'kylling': './images/chicken.svg',
+                    'vegetar': './images/vegetable.svg'
+                };
+                const subtypeIconMap = {
+                    'pasta': './images/pasta.svg',
+                    'nudler': './images/noodles.svg',
+                    'ris': './images/rice.svg',
+                    'gryte': './images/stew.svg',
+                    'bowl': './images/bowl.svg'
+                };
+
+                let bottomLeftIconsHTML = '';
+                if (dish.meat && meatIconMap[dish.meat.toLowerCase()]) {
+                    bottomLeftIconsHTML += `<img src="${meatIconMap[dish.meat.toLowerCase()]}" alt="${dish.meat}" class="icon-meat">`;
+                }
+                if (dish.subtype && subtypeIconMap[dish.subtype.toLowerCase()]) {
+                    bottomLeftIconsHTML += `<img src="${subtypeIconMap[dish.subtype.toLowerCase()]}" alt="${dish.subtype}" class="icon-subtype">`;
+                }
+
+                const currentImageUrl = dish.imageUrl || dish.image;
+                let imageTagHTML = '';
+                let bodyClasses = 'dish-body';
+                if (currentImageUrl) {
+                    imageTagHTML = `<img src="${currentImageUrl}" class="dish-image" alt="${dish.title}">`;
+                } else {
+                    bodyClasses += ' no-image-present';
+                }
+
+                let difficultyHTML = '';
+                if (dish.difficulty && dish.difficulty > 0) {
+                    difficultyHTML = `<div class="dish-difficulty-display">${generateDifficultyIcons(dish.difficulty)}</div>`;
+                }
+
+                const starIconSrc = dish.favourite ? './images/star-filled-yellow.svg' : './images/star-outline.svg';
+
+                dishEl.innerHTML = `
+                    <div class="dish-header">
+                        <div class="dish-header-top">
+                            <p class="dish-user">${dish.user}</p>
+                            <p class="dish-edit">Rediger</p>
+                        </div>
+                        <div class="dish-title">
+                            ${dish.title}
+                        </div>
+                        <div class="dish-subtitle">
+                            ${dish.subtitle}
+                        </div>
+                    </div>
+                    <div class="${bodyClasses}">
+                        ${imageTagHTML}
+                        <div class="dish-top-left-indicators">
+                            <div class="dish-type">${dish.type}</div>
+                            ${difficultyHTML}
+                        </div>
+                        
+                        <div class="dish-bottom-left-icons">
+                            ${bottomLeftIconsHTML}
+                        </div>
+
+                        <div class="dish-star-div">
+                            <img src="${starIconSrc}" class="dish-star">
+                        </div>
+                        <div class="dish-recipie-div">
+                            <a href="${dish.recipieLink}" target="_blank" class="dish-recipie ${dish.recipieLink ? '' : 'hide'}">
+                                <img src="images/recipie.svg">
+                            </a>
+                        </div>
+                    </div>
+                `;
+
+                const starDivEl = dishEl.querySelector('.dish-star-div');
+                const starImgEl = dishEl.querySelector('.dish-star');
+
+                if (starDivEl && starImgEl) {
+                    starDivEl.addEventListener('click', async (event) => {
+                        event.stopPropagation(); // Hindrer at andre klikk-eventer på kortet utløses
+
+                        const newFavouriteStatus = !dish.favourite; // Bytt nåværende favorittstatus
+
+                        // Oppdater stjerneikonet umiddelbart for raskere respons i UI
+                        starImgEl.src = newFavouriteStatus ? './images/star-filled-yellow.svg' : './images/star-outline.svg';
+
+                        try {
+                            // Oppdater retten i Firestore
+                            await updateDish(dish.id, { favourite: newFavouriteStatus });
+                            // Oppdater favorittstatusen på det lokale dish-objektet
+                            dish.favourite = newFavouriteStatus;
+                            console.log(`Matrett ${dish.id} favorittstatus oppdatert til ${newFavouriteStatus}`);
+                        } catch (error) {
+                            console.error("Feil ved oppdatering av favorittstatus for matrett:", dish.id, error);
+                            // Tilbakestill UI-endringen hvis det oppstår en feil
+                            starImgEl.src = dish.favourite ? './images/star-filled-yellow.svg' : './images/star-outline.svg';
+                            alert("Kunne ikke oppdatere favorittstatus. Prøv igjen.");
+                        }
+                    });
+                }
+                
+                dishEl.querySelector('.dish-edit').addEventListener('click', (e) => handleEditClick(e, dish));
+                dishesContainer.appendChild(dishEl);
+
+                // Setup subtitle expansion
+                const subtitleEl = dishEl.querySelector('.dish-subtitle');
+                requestAnimationFrame(() => {
+                    if (subtitleEl.scrollHeight > subtitleEl.clientHeight) {
+                        subtitleEl.classList.add('is-clamped');
+                        subtitleEl.style.cursor = 'pointer';
+                        subtitleEl.onclick = () => {
+                            subtitleEl.classList.toggle('expanded');
+                            subtitleEl.style.cursor = subtitleEl.classList.contains('expanded') ? 'default' : 'pointer';
+                        };
+                    } else {
+                        subtitleEl.classList.remove('is-clamped');
+                        subtitleEl.style.cursor = 'default';
+                        subtitleEl.onclick = null;
+                    }
+                });
+            });
+        } else {
+            dishesContainer.innerHTML = '<p class="no-dishes">Ingen retter funnet.</p>';
+        }
+        showLoading(false); // Skjul lasteindikatoren
     }
 }
 
 /* Edit dish */
 let editingDishId = "null"
 
-async function changeTemplateValues(title="", subtitle="", meat="kjøtt", recipieLink="", type="Middag", favourite=false, imageUrl="", imagePath="") {
-    const dishTemplateEl = document.querySelector('.dish-template')
-    dishTemplateEl.querySelector('.dish-template-title').value = title
-    dishTemplateEl.querySelector('.dish-template-subtitle').value = subtitle
-    dishTemplateEl.querySelector('.dish-template-meat').value = meat
-    dishTemplateEl.querySelector('.dish-template-recipie-link').value = recipieLink
-    dishTemplateEl.querySelector('.dish-template-type').value = type
+async function changeTemplateValues(title="", subtitle="", meat="kjøtt", recipieLink="", type="Middag", favourite=false, imageUrlFromArgs="", imagePathFromArgs="", user="", subtype="", difficulty=0, createdAt="") {
+    dishTitleInput.value = title;
+    dishSubtitleInput.value = subtitle;
+    dishMeatInput.value = meat;
+    dishRecipieLinkInput.value = recipieLink;
+    dishTypeInput.value = type;
+    dishTemplateUserEl.textContent = user;
+    dishSubtypeInput.value = subtype;
+    currentDifficulty = difficulty;
+    updateDifficultyDisplay();
+
+    // Set star icon and class in modal
     if (favourite) {
-        dishTemplateEl.querySelector('.dish-template-star').classList.add('favourite')
+        favouriteInput.classList.add('favourite');
+        favouriteInput.src = './images/star-filled-yellow.svg';
     } else {
-        dishTemplateEl.querySelector('.dish-template-star').classList.remove('favourite')
+        favouriteInput.classList.remove('favourite');
+        favouriteInput.src = './images/star-outline.svg';
+    }
+    
+    if (createdAt) {
+        const dateObj = new Date(createdAt);
+        // nb-NO typically uses DD.MM.YYYY
+        const dateString = `${String(dateObj.getDate()).padStart(2, '0')}.${String(dateObj.getMonth() + 1).padStart(2, '0')}.${dateObj.getFullYear()}`;
+        const timeString = `${String(dateObj.getHours()).padStart(2, '0')}:${String(dateObj.getMinutes()).padStart(2, '0')}`;
+
+        dishTemplateCreatedAtEl.innerHTML = `<span class="timestamp-date">${dateString}</span> <span class="timestamp-time">${timeString}</span>`;
+    } else {
+        dishTemplateCreatedAtEl.innerHTML = ''; // Clear content if no date
     }
     
     // Oppdater bildevisning ved redigering
-    if (imageUrl && imageUrl !== "Bildesti") {
-        imagePreviewImg.src = imageUrl;
-        dishImageURL = imageUrl;
-        currentDishImagePath = imagePath || "";
+    if (imageUrlFromArgs) { // imageUrlFromArgs is dish.imageUrl or dish.image
+        imagePreviewImg.src = imageUrlFromArgs;
+        dishImageURL = imageUrlFromArgs; // Set global for potential re-save if unchanged
+        currentDishImagePath = imagePathFromArgs || ""; // Set global path for potential deletion
     } else {
-        imagePreviewImg.src = "";
+        imagePreviewImg.src = ""; // No fallback, just empty src for preview
         dishImageURL = "";
         currentDishImagePath = "";
     }
@@ -525,142 +817,143 @@ async function loadFilterUsers() {
     });
 }
 
+// Funksjon for å laste og anvende brukerpreferanser fra localStorage
+function loadAndApplyUserPreferences() {
+    let activeFilter = {};
+    let activeSortOrder = 'newest'; // Standard sortering
+    let activeSearchTerm = '';    // Standard søketerm
+
+    const savedFilterJSON = localStorage.getItem('maritaUserFilter');
+    if (savedFilterJSON) {
+        try {
+            activeFilter = JSON.parse(savedFilterJSON) || {};
+        } catch (e) {
+            console.error("Feil ved parsing av lagret filter:", e);
+            localStorage.removeItem('maritaUserFilter'); // Fjern ugyldig data
+            activeFilter = {}; // Gå tilbake til tomt filterobjekt
+        }
+    }
+
+    activeSortOrder = localStorage.getItem('maritaUserSortOrder') || 'newest';
+    activeSearchTerm = localStorage.getItem('maritaUserSearchTerm') || '';
+
+    // Hjelpefunksjon for å oppdatere UI-checkboxes basert på lagret filter
+    const updateUICheckboxes = (selector, filterCategoryKey, valueExtractor = el => el.textContent.trim()) => {
+        const nodes = document.querySelectorAll(selector);
+        if (nodes.length === 0) return;
+
+        const specificSelection = activeFilter[filterCategoryKey];
+
+        // Hvis en spesifikk seleksjon er lagret (og det ikke er "alle")
+        if (specificSelection && Array.isArray(specificSelection) && specificSelection.length > 0 && specificSelection.length < nodes.length) {
+            nodes.forEach(node => node.classList.remove('checked')); // Fjern hake fra alle
+            nodes.forEach(node => {
+                if (specificSelection.includes(valueExtractor(node))) {
+                    node.classList.add('checked'); // Legg til hake på de lagrede
+                }
+            });
+        } else if (!activeFilter.hasOwnProperty(filterCategoryKey) || (specificSelection && specificSelection.length === 0) || (specificSelection && specificSelection.length === nodes.length)) {
+            // Hvis kategorien ikke finnes i filteret, eller er et tomt array, eller velger alle => alle skal være huket av
+            // (Stoler på at loadFilterUsers har huket av alle personer, og HTML har huket av de andre)
+            nodes.forEach(node => node.classList.add('checked'));
+        }
+    };
+
+    // Anvend på UI
+    // Personer (loadFilterUsers setter alle til checked først)
+    updateUICheckboxes('.filter-people .option', 'persons', el => el.textContent.trim().toLowerCase());
+    updateUICheckboxes('.filter-type .option', 'type');
+    updateUICheckboxes('.filter-meat .option', 'meat', el => el.textContent.trim().toLowerCase());
+    // updateUICheckboxes('.filter-subtype .option', 'subtype', el => el.textContent.trim().toLowerCase()); // Gammel linje for subtype
+
+    // Manuell håndtering for subtype-filteret inkludert "Ikke valgt"
+    const subtypeNodes = document.querySelectorAll('.filter-subtype .option');
+    if (subtypeNodes.length > 0) {
+        const savedSubtypes = activeFilter.subtype || []; // Faktiske subtyper
+        const includeNoSubtype = activeFilter.includeNoSubtype || false;
+        let allSubtypesCheckedByDefault = true; // Anta at alle skal sjekkes hvis ingen spesifikk info finnes
+
+        // Sjekk om det finnes en lagret tilstand for subtyper eller "includeNoSubtype"
+        if (activeFilter.hasOwnProperty('subtype') || activeFilter.hasOwnProperty('includeNoSubtype')) {
+            allSubtypesCheckedByDefault = false;
+        }
+
+        subtypeNodes.forEach(node => {
+            const nodeValue = node.textContent.trim().toLowerCase();
+            if (allSubtypesCheckedByDefault) {
+                node.classList.add('checked');
+            } else {
+                node.classList.remove('checked'); // Fjern først, legg så til om nødvendig
+                if (nodeValue === 'ingen kategori' && includeNoSubtype) {
+                    node.classList.add('checked');
+                } else if (nodeValue !== 'ingen kategori' && savedSubtypes.includes(nodeValue)) {
+                    node.classList.add('checked');
+                }
+            }
+        });
+    }
+
+    const favOption = document.querySelector('.filter-favorite .option');
+    if (favOption) {
+        if (activeFilter.favourite) { // Sjekk om favourite-egenskapen eksisterer og er true
+            favOption.classList.add('checked');
+        } else {
+            favOption.classList.remove('checked'); // Fjern haken eksplisitt hvis ikke true eller ikke til stede
+        }
+    }
+
+    document.getElementById('sort-select').value = activeSortOrder;
+    document.getElementById('search-input').value = activeSearchTerm;
+
+    return { filter: activeFilter, sortOrder: activeSortOrder, searchTerm: activeSearchTerm };
+}
+
 // Kall funksjonen når DOM-en er helt lastet inn
-window.addEventListener('DOMContentLoaded', () => {
+window.addEventListener('DOMContentLoaded', async () => {
     // Initialiser localStorage.user hvis det ikke finnes
     if (!localStorage.user) {
         localStorage.user = "null";
     }
     
-    // Initialiser filterbrukere
-    loadFilterUsers();
+    // Initialiser filterbrukere (vent på at disse er lastet før loginState kalles)
+    await loadFilterUsers(); 
     
-    // Sjekk innloggingsstatus
+    // Sjekk innloggingsstatus (som nå vil kalle loadAndApplyUserPreferences og showDishes)
     loginState();
 });
 
 // --- SØKEFUNKSJONALITET ---
+// Funksjonen som utfører søkingen (This function can be removed as its logic is merged into #filter-button listener and showDishes)
+/*
+async function performSearch() {
+    // ... (old search logic) ...
+}
 document.querySelector('#search-button').addEventListener('click', performSearch);
 document.querySelector('#search-input').addEventListener('keydown', (e) => {
     if (e.key === 'Enter') {
         performSearch();
     }
 });
+*/
 
-// Funksjonen som utfører søkingen
-async function performSearch() {
-    const searchTerm = document.querySelector('#search-input').value.toLowerCase().trim();
-    if (searchTerm === '') {
-        await showDishes();
-        return;
+// Update event listener for search input to trigger the combined search/filter button
+document.getElementById('search-input').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+        document.getElementById('filter-button').click(); // Trigger the main button
     }
-    
-    const allDishes = await getDishes();
-    const filteredDishes = allDishes.filter(dish => 
-        dish.title.toLowerCase().includes(searchTerm) || 
-        dish.subtitle.toLowerCase().includes(searchTerm)
+});
+
+// Funksjon som kalles når brukeren klikker på "Rediger"
+async function handleEditClick(e, dish) {
+    editingDishId = dish.id;
+    const imageUrlForEdit = dish.imageUrl || dish.image;
+    const imagePathForEdit = dish.imagePath; // Assumes dish.imagePath contains the storage path
+    await changeTemplateValues(
+        dish.title, dish.subtitle, dish.meat, dish.recipieLink, 
+        dish.type, dish.favourite, imageUrlForEdit, imagePathForEdit, 
+        dish.user, dish.subtype || "", dish.difficulty || 0, dish.createdAt || ""
     );
-    
-    const dishesContainer = document.querySelector('.dishes');
-    dishesContainer.innerHTML = "";
-    
-    if (filteredDishes.length === 0) {
-        dishesContainer.innerHTML = `<div class="no-results">Ingen retter funnet for "${searchTerm}"</div>`;
-        return;
-    }
-    
-    filteredDishes.forEach(dish => {
-        const dishDiv = document.createElement('div');
-        dishDiv.className = 'dish';
-        dishDiv.setAttribute('data-dish-id', dish.id);
-        dishDiv.setAttribute('data-dish-meat', dish.meat);
-
-        const dishImageStyle = dish.image && dish.image !== "Bildesti" 
-            ? `background-image: url('${dish.image}');` 
-            : ``;
-
-        dishDiv.innerHTML = `
-            <div class="dish-header">
-                <div class="dish-header-top">
-                    <p class="dish-user">${dish.user}</p>
-                    <p class="dish-edit">Rediger</p>
-                </div>
-                <div class="dish-title">
-                    ${dish.title}
-                </div>
-                <div class="dish-subtitle">
-                    ${dish.subtitle}
-                </div>
-            </div>
-            <div class="dish-body" style="${dishImageStyle}">
-                <div class="dish-type">${dish.type}</div>
-                <div class="dish-star-div ${dish.favourite ? 'favourite' : ''}">
-                    <img src="images/star.svg" class="dish-star ${dish.favourite ? 'favourite' : ''}">
-                </div>
-                <div class="dish-recipie-div">
-                    <a href="${dish.recipieLink}" target="_blank" class="dish-recipie">
-                        <img src="images/recipie.svg">
-                    </a>
-                </div>
-            </div>
-        `;
-
-        dishesContainer.appendChild(dishDiv);
-
-        // Setup subtitle expansion for search results
-        const subtitleEl = dishDiv.querySelector('.dish-subtitle');
-        
-        // Use requestAnimationFrame to ensure layout is calculated before checking height
-        requestAnimationFrame(() => {
-            const isClamped = subtitleEl.scrollHeight > subtitleEl.clientHeight;
-
-            if (isClamped) {
-                subtitleEl.classList.add('is-clamped');
-                subtitleEl.style.cursor = 'pointer';
-                 subtitleEl.onclick = () => {
-                     subtitleEl.classList.toggle('expanded');
-                     // After toggling, re-evaluate cursor based on expanded state
-                      if (subtitleEl.classList.contains('expanded')) {
-                         subtitleEl.style.cursor = 'default'; 
-                     } else {
-                         subtitleEl.style.cursor = 'pointer';
-                     }
-                 };
-            } else {
-                subtitleEl.classList.remove('is-clamped');
-                subtitleEl.style.cursor = 'default';
-                subtitleEl.onclick = null; // Remove listener if not clamped
-            }
-        });
-    });
-    
-    document.querySelectorAll('.dish-edit').forEach(editButton => {
-        editButton.addEventListener('click', handleEditClick);
-    });
-}
-
-// Hjelpefunksjon for å håndtere klikk på rediger-knappen
-function handleEditClick(e) {
-    const dishDiv = e.target.closest('.dish');
-    editingDishId = dishDiv.getAttribute('data-dish-id');
-    console.log(`Redigerer rett med ID: ${editingDishId}`);
-
-    const title = dishDiv.querySelector('.dish-title').innerText;
-    const subtitle = dishDiv.querySelector('.dish-subtitle').innerText;
-    const meat = dishDiv.getAttribute('data-dish-meat');
-    const recipieLink = dishDiv.querySelector('.dish-recipie').getAttribute('href')
-    const type = dishDiv.querySelector('.dish-type').innerText
-    const favourite = dishDiv.querySelector('.dish-star-div').classList.contains('favourite')
-    
-    // Finn dishList først
-    getDishes().then(dishList => {
-        const currentDish = dishList.find(d => d.id === editingDishId);
-        const imageUrl = currentDish ? currentDish.image : "";
-        const imagePath = currentDish ? currentDish.imagePath : "";
-        
-        changeTemplateValues(title, subtitle, meat, recipieLink, type, favourite, imageUrl, imagePath);
-        dishTemplateEl.classList.remove('hide');
-    });
+    dishTemplateEl.classList.remove('hide');
 }
 
 // --- LASTEINDIKATORFUNKSJONALITET ---
@@ -681,4 +974,3 @@ function showLoading(show = false) {
         spinner.classList.add('hide');
     }
 }
-
