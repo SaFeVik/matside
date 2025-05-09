@@ -24,6 +24,8 @@ const dishTemplateCreatedAtEl = dishTemplateEl.querySelector('.dish-template-cre
 const takePicInput = document.querySelector('.dish-template-image-button-take');
 const selectPicInput = document.querySelector('.dish-template-image-button-select');
 
+const saveButton = document.querySelector('.save-dish-button');
+
 /* LOGIN */
 document.querySelector('.signup-show').addEventListener('click', () => {
     document.querySelector('.signup-div').classList.toggle("hide")
@@ -474,7 +476,7 @@ if (removeImageButton) {
 }
 
 // --- LAGRING AV MATRETT ---
-document.querySelector('.save-dish-button').addEventListener('click', async () => {
+saveButton.addEventListener('click', async () => {
     console.log("Starter lagring av matrett...");
     const favourite = favouriteInput.classList.contains('favourite');
     const dishData = {
@@ -509,40 +511,82 @@ document.querySelector('.save-dish-button').addEventListener('click', async () =
     }
 });
 
+// Global Enter-lytter for redigeringsvindu
+document.addEventListener('keydown', function(event) {
+    // Sjekk for redigeringsvindu først
+    if (dishTemplateEl && !dishTemplateEl.classList.contains('hide') && event.key === 'Enter') {
+        event.preventDefault(); 
+        if (saveButton) {
+           console.log("Global Enter trykket mens redigeringsmal er åpen. Lagrer...");
+           saveButton.click();
+        }
+        return; // Avslutt her hvis Enter var for redigeringsvinduet
+    }
+
+    // Sjekk deretter for filtervindu
+    const filterDiv = document.querySelector('.filter-div');
+    const filterButton = document.querySelector('#filter-button');
+
+    if (filterDiv && !filterDiv.classList.contains('hide') && event.key === 'Enter') {
+        // Forhindre standard Enter-oppførsel (f.eks. hvis et input er i fokus i filteret)
+        event.preventDefault();
+        
+        if (filterButton) {
+            console.log("Global Enter trykket mens filtervindu er åpent. Utfører søk/filter...");
+            filterButton.click();
+        }
+    }
+});
+
 /* Show dishes */
 async function showDishes(filter, sortOrder, searchTerm) {
     if (localStorage.user !== "null") {
-        let dishes = await getDishes(filter, localStorage.user); // Initial fetch with filters
+        showLoading(true); // Vis lasteindikatoren
+        let dishes;
+        try {
+            // Prøv å hente filter- og sorteringspreferanser hvis de ikke er sendt med
+            if (!filter && !sortOrder && !searchTerm) {
+                const preferences = loadAndApplyUserPreferences();
+                filter = preferences.filter;
+                sortOrder = preferences.sortOrder;
+                searchTerm = preferences.searchTerm;
+            }
+            
+            dishes = await getDishes(filter); // Initial fetch with filters
 
-        // Apply search term if provided
-        if (searchTerm) {
-            dishes = dishes.filter(dish => 
-                dish.title.toLowerCase().includes(searchTerm) || 
-                dish.subtitle.toLowerCase().includes(searchTerm)
-            );
-        }
+            // Apply search term if provided
+            if (searchTerm) {
+                dishes = dishes.filter(dish => 
+                    (dish.title && dish.title.toLowerCase().includes(searchTerm)) || 
+                    (dish.subtitle && dish.subtitle.toLowerCase().includes(searchTerm))
+                );
+            }
 
-        // Klientside-filter for "subtype" (add this before sorting)
-        if (filter && ( (filter.subtype && filter.subtype.length > 0) || filter.includeNoSubtype) ) {
-            dishes = dishes.filter(dish => {
-                const dishSubtypeLower = dish.subtype ? dish.subtype.toLowerCase() : null;
-                let matchesSelectedSubtype = false;
-                if (filter.subtype && filter.subtype.length > 0) {
-                    matchesSelectedSubtype = dishSubtypeLower && filter.subtype.includes(dishSubtypeLower);
-                }
-                let matchesNoSubtypeCondition = false;
-                if (filter.includeNoSubtype) {
-                    matchesNoSubtypeCondition = !dishSubtypeLower || dishSubtypeLower === '';
-                }
-                return matchesSelectedSubtype || matchesNoSubtypeCondition;
-            });
+            // Klientside-filter for "subtype"
+            if (filter && ( (filter.subtype && filter.subtype.length > 0) || filter.includeNoSubtype) ) {
+                dishes = dishes.filter(dish => {
+                    const dishSubtypeLower = dish.subtype ? dish.subtype.toLowerCase() : null;
+                    let matchesSelectedSubtype = false;
+                    if (filter.subtype && filter.subtype.length > 0) {
+                        matchesSelectedSubtype = dishSubtypeLower && filter.subtype.includes(dishSubtypeLower);
+                    }
+                    let matchesNoSubtypeCondition = false;
+                    if (filter.includeNoSubtype) {
+                        matchesNoSubtypeCondition = !dishSubtypeLower || dishSubtypeLower === '';
+                    }
+                    return matchesSelectedSubtype || matchesNoSubtypeCondition;
+                });
+            }
+        } catch (error) {
+            console.error("Feil under henting eller filtrering av retter:", error);
+            dishes = []; // Sett til tomt array for å unngå videre feil
         }
 
         const dishesContainer = document.querySelector('.dishes');
-        dishesContainer.innerHTML = "";
+        dishesContainer.innerHTML = ""; // Tøm containeren
 
         // Sort dishes if sortOrder is provided
-        if (sortOrder && dishes.length > 0) {
+        if (sortOrder && dishes && dishes.length > 0) { // Sjekk at dishes er definert
             dishes.sort((a, b) => {
                 switch (sortOrder) {
                     case 'newest':
@@ -552,17 +596,16 @@ async function showDishes(filter, sortOrder, searchTerm) {
                         if (!a.createdAt || !b.createdAt) return 0;
                         return new Date(a.createdAt) - new Date(b.createdAt);
                     case 'alpha-asc':
-                        return a.title.localeCompare(b.title, 'nb', { sensitivity: 'base' });
+                        return (a.title || "").localeCompare(b.title || "", 'nb', { sensitivity: 'base' });
                     case 'alpha-desc':
-                        return b.title.localeCompare(a.title, 'nb', { sensitivity: 'base' });
+                        return (b.title || "").localeCompare(a.title || "", 'nb', { sensitivity: 'base' });
                     default:
                         return 0;
                 }
             });
         }
-
-        // Hvis det finnes retter, legg dem til i DOM. Ellers vis melding.
-        if (dishes.length > 0) {
+        
+        if (dishes && dishes.length > 0) { // Sjekk at dishes er definert
             dishes.forEach(dish => {
                 const dishEl = document.createElement('div');
                 dishEl.classList.add('dish');
@@ -586,14 +629,16 @@ async function showDishes(filter, sortOrder, searchTerm) {
                     'nudler': './images/noodles.svg',
                     'ris': './images/rice.svg',
                     'gryte': './images/stew.svg',
-                    'bowl': './images/bowl.svg'
+                    'bowl': './images/bowl.svg',
+                    'ingen kategori': '' // Ingen ikon for "ingen kategori"
                 };
 
                 let bottomLeftIconsHTML = '';
                 if (dish.meat && meatIconMap[dish.meat.toLowerCase()]) {
                     bottomLeftIconsHTML += `<img src="${meatIconMap[dish.meat.toLowerCase()]}" alt="${dish.meat}" class="icon-meat">`;
                 }
-                if (dish.subtype && subtypeIconMap[dish.subtype.toLowerCase()]) {
+                // Kun vis subtype-ikon hvis det er en subtype og den har et ikon definert
+                if (dish.subtype && subtypeIconMap[dish.subtype.toLowerCase()] && subtypeIconMap[dish.subtype.toLowerCase()] !== '') {
                     bottomLeftIconsHTML += `<img src="${subtypeIconMap[dish.subtype.toLowerCase()]}" alt="${dish.subtype}" class="icon-subtype">`;
                 }
 
@@ -601,7 +646,7 @@ async function showDishes(filter, sortOrder, searchTerm) {
                 let imageTagHTML = '';
                 let bodyClasses = 'dish-body';
                 if (currentImageUrl) {
-                    imageTagHTML = `<img src="${currentImageUrl}" class="dish-image" alt="${dish.title}">`;
+                    imageTagHTML = `<img src="${currentImageUrl}" class="dish-image" alt="${dish.title || 'Bilde av matrett'}">`;
                 } else {
                     bodyClasses += ' no-image-present';
                 }
@@ -612,24 +657,30 @@ async function showDishes(filter, sortOrder, searchTerm) {
                 }
 
                 const starIconSrc = dish.favourite ? './images/star-filled-yellow.svg' : './images/star-outline.svg';
+                
+                let editButtonHTML = '';
+                // Vis "Rediger" kun hvis brukeren er logget inn og er eieren av retten
+                if (localStorage.user && dish.user === localStorage.user) {
+                    editButtonHTML = '<p class="dish-edit">Rediger</p>';
+                }
 
                 dishEl.innerHTML = `
                     <div class="dish-header">
                         <div class="dish-header-top">
-                            <p class="dish-user">${dish.user}</p>
-                            <p class="dish-edit">Rediger</p>
+                            <p class="dish-user">${dish.user || "Ukjent bruker"}</p>
+                            ${editButtonHTML}
                         </div>
                         <div class="dish-title">
-                            ${dish.title}
+                            ${dish.title || "Uten tittel"}
                         </div>
                         <div class="dish-subtitle">
-                            ${dish.subtitle}
+                            ${dish.subtitle || ""}
                         </div>
                     </div>
                     <div class="${bodyClasses}">
                         ${imageTagHTML}
                         <div class="dish-top-left-indicators">
-                            <div class="dish-type">${dish.type}</div>
+                            <div class="dish-type">${dish.type || "Ukjent type"}</div>
                             ${difficultyHTML}
                         </div>
                         
@@ -638,67 +689,77 @@ async function showDishes(filter, sortOrder, searchTerm) {
                         </div>
 
                         <div class="dish-star-div">
-                            <img src="${starIconSrc}" class="dish-star">
+                            <img src="${starIconSrc}" class="dish-star" alt="Favorittstjerne">
                         </div>
                         <div class="dish-recipie-div">
-                            <a href="${dish.recipieLink}" target="_blank" class="dish-recipie ${dish.recipieLink ? '' : 'hide'}">
-                                <img src="images/recipie.svg">
+                            <a href="${dish.recipieLink || '#'}" target="_blank" class="dish-recipie ${dish.recipieLink ? '' : 'hide'}" aria-label="Link til oppskrift">
+                                <img src="./images/recipie.svg" alt="Oppskriftsikon">
                             </a>
                         </div>
                     </div>
                 `;
-
+                
+                // Legg til event listener for stjerne-ikonet
                 const starDivEl = dishEl.querySelector('.dish-star-div');
                 const starImgEl = dishEl.querySelector('.dish-star');
 
                 if (starDivEl && starImgEl) {
                     starDivEl.addEventListener('click', async (event) => {
-                        event.stopPropagation(); // Hindrer at andre klikk-eventer på kortet utløses
+                        event.stopPropagation(); 
 
-                        const newFavouriteStatus = !dish.favourite; // Bytt nåværende favorittstatus
+                        const newFavouriteStatus = !(dish.favourite === true); // Sikrer boolean
 
-                        // Oppdater stjerneikonet umiddelbart for raskere respons i UI
                         starImgEl.src = newFavouriteStatus ? './images/star-filled-yellow.svg' : './images/star-outline.svg';
 
                         try {
-                            // Oppdater retten i Firestore
                             await updateDish(dish.id, { favourite: newFavouriteStatus });
-                            // Oppdater favorittstatusen på det lokale dish-objektet
-                            dish.favourite = newFavouriteStatus;
+                            dish.favourite = newFavouriteStatus; // Oppdater lokalt objekt
                             console.log(`Matrett ${dish.id} favorittstatus oppdatert til ${newFavouriteStatus}`);
                         } catch (error) {
                             console.error("Feil ved oppdatering av favorittstatus for matrett:", dish.id, error);
-                            // Tilbakestill UI-endringen hvis det oppstår en feil
-                            starImgEl.src = dish.favourite ? './images/star-filled-yellow.svg' : './images/star-outline.svg';
+                            starImgEl.src = dish.favourite ? './images/star-filled-yellow.svg' : './images/star-outline.svg'; // Tilbakestill
                             alert("Kunne ikke oppdatere favorittstatus. Prøv igjen.");
                         }
                     });
                 }
                 
-                dishEl.querySelector('.dish-edit').addEventListener('click', (e) => handleEditClick(e, dish));
+                // FIKS: Kun legg til event listener hvis .dish-edit elementet finnes
+                const editButtonElement = dishEl.querySelector('.dish-edit');
+                if (editButtonElement) {
+                    editButtonElement.addEventListener('click', (e) => handleEditClick(e, dish));
+                }
+
                 dishesContainer.appendChild(dishEl);
 
                 // Setup subtitle expansion
                 const subtitleEl = dishEl.querySelector('.dish-subtitle');
-                requestAnimationFrame(() => {
-                    if (subtitleEl.scrollHeight > subtitleEl.clientHeight) {
-                        subtitleEl.classList.add('is-clamped');
-                        subtitleEl.style.cursor = 'pointer';
-                        subtitleEl.onclick = () => {
-                            subtitleEl.classList.toggle('expanded');
-                            subtitleEl.style.cursor = subtitleEl.classList.contains('expanded') ? 'default' : 'pointer';
-                        };
-                    } else {
-                        subtitleEl.classList.remove('is-clamped');
-                        subtitleEl.style.cursor = 'default';
-                        subtitleEl.onclick = null;
-                    }
-                });
+                // Sjekk om subtitleEl finnes før du prøver å lese egenskaper
+                if (subtitleEl) {
+                    requestAnimationFrame(() => {
+                        // Ekstra sjekk for scrollHeight og clientHeight, da de kan være 0 hvis elementet er skjult
+                        if (subtitleEl.scrollHeight > subtitleEl.clientHeight && subtitleEl.clientHeight > 0) {
+                            subtitleEl.classList.add('is-clamped');
+                            subtitleEl.style.cursor = 'pointer';
+                            subtitleEl.onclick = () => {
+                                subtitleEl.classList.toggle('expanded');
+                                subtitleEl.style.cursor = subtitleEl.classList.contains('expanded') ? 'default' : 'pointer';
+                            };
+                        } else {
+                            subtitleEl.classList.remove('is-clamped', 'expanded'); // Fjern begge klasser
+                            subtitleEl.style.cursor = 'default';
+                            subtitleEl.onclick = null;
+                        }
+                    });
+                }
             });
         } else {
-            dishesContainer.innerHTML = '<p class="no-dishes">Ingen retter funnet.</p>';
+            dishesContainer.innerHTML = '<p class="no-dishes">Ingen retter funnet som passer søket ditt.</p>';
         }
         showLoading(false); // Skjul lasteindikatoren
+    } else {
+        // Håndter tilfellet der localStorage.user er "null" (bruker ikke logget inn)
+        document.querySelector('.dishes').innerHTML = '<p class="no-dishes">Vennligst logg inn for å se retter.</p>';
+        showLoading(false);
     }
 }
 
@@ -945,6 +1006,13 @@ document.getElementById('search-input').addEventListener('keydown', (e) => {
 
 // Funksjon som kalles når brukeren klikker på "Rediger"
 async function handleEditClick(e, dish) {
+    // Sikkerhetssjekk: Kun eier kan redigere
+    if (!localStorage.user || dish.user !== localStorage.user) {
+        console.warn(`Uautorisert redigeringsforsøk av bruker '${localStorage.user}' på rett '${dish.id}' eid av '${dish.user}'.`);
+        alert("Du kan kun redigere dine egne retter.");
+        return; // Avbryt redigering
+    }
+
     editingDishId = dish.id;
     const imageUrlForEdit = dish.imageUrl || dish.image;
     const imagePathForEdit = dish.imagePath; // Assumes dish.imagePath contains the storage path
