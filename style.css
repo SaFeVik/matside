@@ -46,8 +46,11 @@ header {
     outline: none;
     border: 1px solid #ddd;
     border-radius: 8px;
-    font-size: 14px;
     transition: border-color 0.2s ease;
+}
+.login-div input.login-name,
+.login-div input.signup-name {
+    font-size: 16px;
 }
 .login-div input:focus {
     border-color: #FFB0B0;
@@ -244,7 +247,7 @@ button:hover {
     flex-direction: column;
     position: relative;
     width: 100%;
-    max-width: 350px;
+    max-width: 320px;
     height: 380px;
     box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
     border-radius: 12px;
@@ -563,18 +566,25 @@ button:hover {
 }
 
 .dish-template input, .dish-template select, #sort-select {
-    padding: 8px 12px;
+    height: 40px;
+    padding: 10px 12px;
     outline: none;
     border: 1px solid #ddd;
-    border-radius: 6px;
-    font-size: 16px;
+    border-radius: 8px;
+    font-size: 14px;
     transition: border-color 0.2s ease;
-    background-color: white;
-    color: #333;
     width: 100%;
-    height: 40px;
-    line-height: normal;
-    cursor: pointer;
+    background-color: white;
+}
+
+.dish-template input, .dish-template select {
+    cursor: auto; /* Changed from pointer */
+}
+
+#sort-select {
+    cursor: pointer; /* Explicitly kept as pointer */
+    width: auto; /* Overstyrer width: 100% for #sort-select */
+    flex-grow: 0; /* Sørger for at den ikke vokser unødvendig hvis i en flex container */
 }
 
 .dish-template select {
@@ -675,19 +685,53 @@ button:hover {
     background-color: #ffebee;
 }
 
-.dish-template-image-preview {
-    max-width: 100%;
-    max-height: 150px;
+.dish-template-image-drop-zone.drag-over {
+    border-color: #FFB0B0;
+    background-color: #fff5f5;
+    color: #FFB0B0;
+}
+
+.image-drop-preview-wrapper {
+    display: flex;
+    align-items: flex-start;
+    gap: 15px;
     margin-top: 10px;
+}
+
+.dish-template-image-drop-zone {
+    border: 2px dashed #ddd;
     border-radius: 8px;
+    padding: 20px;
+    text-align: center;
+    color: #aaa;
+    transition: background-color 0.2s ease, border-color 0.2s ease;
+    flex-basis: calc(70% - 7.5px);
+    flex-shrink: 0;
+    height: 70px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.dish-template-image-preview {
+    flex-basis: calc(30% - 7.5px);
+    flex-shrink: 0;
+    height: 70px;
     object-fit: cover;
-    display: block;
+    border-radius: 8px;
+    border: 1px solid #eee;
+    max-width: calc(50% - 7.5px);
+}
+
+.dish-template-image-drop-zone p {
+    /* ... existing code ... */
 }
 
 .dish-template-star {
     width: 28px;
     cursor: pointer;
     margin-left: auto;
+    align-self: center;
     transition: transform 0.2s ease;
 }
 
@@ -815,9 +859,16 @@ button:hover {
     
     .dish-template {
         width: 90%;
+        padding: 12px;
         margin: 0 auto;
         left: 50%;
         transform: translate(-50%, -50%) scale(1);
+    }
+    
+    .dish-template input, 
+    .dish-template select {
+        padding: 8px 6px;
+        font-size: 15px;
     }
     
     .filter-search-div {
@@ -844,7 +895,7 @@ button:hover {
 
 @media only screen and (min-width: 400px) {
     .dish {
-        width: 350px;
+        width: 320px;
     }
 }
 

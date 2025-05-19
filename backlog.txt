@@ -1,8 +1,2 @@
-1. Når man redigerer eller legger til ny rett skal det stå brukerens navn på toppen og ikke "Felix Vikeren Vik".
-2. Det skal være et lite område når man redigerer eller legger til ny rett hvor man kan dra over et bilde. Sånn "drag and drop".
-3. Til høyre for "kjøttype"-ikonet skal det være et annet ikon. Det viser enda en type: pasta, nudler, ris, gryte, bowl, eller la stå tomt (her tenkter jeg å legge til flere alternativer etterhvert). Det skal være samme stil som "kjøttype"-ikonet.
-4. Under rettype skal det stå vanskelighetsgrad i form av 1-3 knivikoner. Dette kan man også velge i redigeringsvinduet.
-5. Rettene skal inneholde informasjon om dato og tid de ble lagt til, til høyre for navnet på toppen av redigeringsvinduet.
-6. Man skal kunne, i tillegg til å filtrere, sortere etter dato lagt til eldst eller nyest.
-7. Det er en greie på mobil som gjør slik at når man er ferdig i redigeringsvinduet må man zoome ut igjen. Kan du passe på slik at dette ikke skjer?
-8. I tillegg vil jeg at designet på dropdown-menyene skal være lik som på PC. Det ser du på bildene. 
+1. Ikke cursor pointer på input-felt i redigeringsvinduet. 
+2. Når man drar inn bilder skal det være en firkant der slik at man ser hvor man kan slippe bildet. I tillegg skal det komme en hover-effekt slik at man ser at man kan slippe bildet. Dette er altså rundt "Dra og slipp et bilde her"

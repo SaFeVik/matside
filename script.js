@@ -259,12 +259,13 @@ const COMPRESSION_QUALITY = 0.7;
 
 // Oppdatert funksjon for å konvertere, komprimere og laste opp bildet
 async function processImage(file) {
-    console.log("Starter prosessering av bilde...", file);
+    // console.log("processImage: Started processing image file:", file);
     showLoading(true); // Vis lasteindikatoren
     
     try {
         // Sjekk om filen er en HEIC-fil
         if (file.type === 'image/heic' || file.name.toLowerCase().endsWith('.heic')) {
+            // console.log("processImage: Detected HEIC file, attempting conversion.");
             try {
                 const conversionResult = await heic2any({ 
                     blob: file, 
@@ -272,9 +273,9 @@ async function processImage(file) {
                     quality: COMPRESSION_QUALITY 
                 });
                 file = Array.isArray(conversionResult) ? conversionResult[0] : conversionResult;
-                console.log("HEIC konvertering var vellykket!");
+                // console.log("processImage: HEIC conversion successful!");
             } catch (error) {
-                console.error("Feil under konvertering av HEIC:", error);
+                // console.error("processImage: Error during HEIC conversion:", error);
                 showLoading(false); // Skjul lasteindikatoren ved feil
                 alert("Kunne ikke konvertere HEIC-bildet. Prøv et annet bilde.");
                 return;
@@ -283,40 +284,39 @@ async function processImage(file) {
         
         // Hvis i redigeringsmodus og bilde allerede finnes, slett det gamle
         if (editingDishId !== "null" && currentDishImagePath !== "") {
-            console.log("Sletter gammelt bilde fra Storage...", currentDishImagePath);
+            // console.log("processImage: Editing mode - Deleting old image from Storage:", currentDishImagePath);
             const oldImageRef = ref(storage, currentDishImagePath);
             try {
                 await deleteObject(oldImageRef);
-                console.log("Gammelt bilde slettet");
+                // console.log("processImage: Old image deleted successfully.");
             } catch (err) {
-                console.error("Feil ved sletting av gammelt bilde:", err);
-                // Fortsett likevel, feilen er ikke kritisk
+                // console.error("processImage: Error deleting old image:", err);
             }
             currentDishImagePath = "";
         }
         
-        // Last bilde inn i Image-objekt for komprimering
+        // console.log("processImage: Compressing image...");
         const compressedFile = await compressImage(file);
+        // console.log("processImage: Image compression complete.");
         
-        // Generer filnavn og sti
         const filename = `${Date.now()}.jpg`;
         dishImagePath = `images/${filename}`;
-        console.log("Starter opplasting til Storage med filsti:", dishImagePath);
+        // console.log("processImage: Starting upload to Storage with path:", dishImagePath);
         
-        // Referanse til hvor bildet skal lagres i Firebase Storage
         const storageRef = ref(storage, dishImagePath);
-        
-        // Last opp det komprimerte bildet
         const snapshot = await uploadBytes(storageRef, compressedFile);
         const url = await getDownloadURL(snapshot.ref);
         
-        console.log("Opplasting vellykket! Nedlastings-URL:", url);
+        // console.log("processImage: Upload successful! Download URL:", url);
         imagePreviewImg.src = url;
+        // console.log("processImage: Set imagePreviewImg.src to:", imagePreviewImg.src);
+        imagePreviewImg.style.display = 'block'; // Make sure it's visible
+        // console.log("processImage: Set imagePreviewImg.style.display to 'block'.");
         dishImageURL = url;
-        showLoading(false); // Skjul lasteindikatoren ved vellykket opplasting
+        showLoading(false); 
         
     } catch (error) {
-        console.error("Feil ved bildeprosessering:", error);
+        // console.error("processImage: Error during image processing:", error);
         showLoading(false);
         alert("Det oppstod en feil ved behandling av bildet. Prøv igjen senere.");
     }
@@ -395,30 +395,40 @@ selectPicButton.addEventListener('click', () => {
     selectPicInput.click();
 });
 
-// --- DRAG AND DROP IMAGE LOGIC ---
+// Drag and drop for imageDropZoneEl
 if (imageDropZoneEl) {
-    imageDropZoneEl.addEventListener('dragover', (event) => {
-        event.preventDefault(); // Necessary to allow dropping
-        imageDropZoneEl.classList.add('dragover');
+    imageDropZoneEl.addEventListener('dragenter', (e) => {
+        e.preventDefault();
+        imageDropZoneEl.classList.add('drag-over');
     });
 
-    imageDropZoneEl.addEventListener('dragleave', (event) => {
-        imageDropZoneEl.classList.remove('dragover');
+    imageDropZoneEl.addEventListener('dragover', (e) => {
+        e.preventDefault(); // Viktig for å tillate drop
+        imageDropZoneEl.classList.add('drag-over'); // Sørg for at klassen er der underveis
     });
 
-    imageDropZoneEl.addEventListener('drop', async (event) => {
-        event.preventDefault(); // Prevent opening the file in the browser
-        imageDropZoneEl.classList.remove('dragover');
+    imageDropZoneEl.addEventListener('dragleave', (e) => {
+        e.preventDefault();
+        // Sjekk om man forlater til et child element, i så fall ikke fjern klassen
+        if (e.relatedTarget && imageDropZoneEl.contains(e.relatedTarget)) {
+            return;
+        }
+        imageDropZoneEl.classList.remove('drag-over');
+    });
 
-        if (event.dataTransfer.files && event.dataTransfer.files.length > 0) {
-            const file = event.dataTransfer.files[0];
-            // Ensure it's an image file (optional, but good practice)
-            if (file.type.startsWith('image/')) {
-                await processImage(file);
-            } else {
-                alert("Vennligst slipp en bildefil.");
+    imageDropZoneEl.addEventListener('drop', async (e) => {
+        e.preventDefault();
+        imageDropZoneEl.classList.remove('drag-over');
+        if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+            const file = e.dataTransfer.files[0];
+            // Her antar vi at processImage er definert et annet sted og håndterer filen
+            // For eksempel: displayImagePreview(file); og lagre filen for opplasting
+            if (typeof processImage === 'function') {
+                await processImage(file); 
             }
-            event.dataTransfer.clearData();
+            // Sørg for at filinput-feltet tømmes hvis det skulle vært brukt
+            if(takePicInput) takePicInput.value = '';
+            if(selectPicInput) selectPicInput.value = '';
         }
     });
 }
@@ -458,19 +468,28 @@ const removeImageButton = document.querySelector('.remove-image-button');
 if (removeImageButton) {
     removeImageButton.addEventListener('click', () => {
         let imagePathToDelete = editingDishId !== "null" ? currentDishImagePath : dishImagePath;
+        // console.log("removeImageButton: Clicked. Attempting to remove image. Path to delete:", imagePathToDelete);
         if (imagePathToDelete) {
-            console.log("Fjerner bilde manuelt med sti:", imagePathToDelete);
+            // console.log("removeImageButton: Proceeding to delete image from storage:", imagePathToDelete);
             deleteObject(ref(storage, imagePathToDelete))
                 .then(() => {
-                    console.log("Bilde slettet manuelt.");
+                    // console.log("removeImageButton: Image deleted successfully from storage.");
                     dishImageURL = "";
                     dishImagePath = "";
                     currentDishImagePath = "";
                     imagePreviewImg.src = "";
+                    imagePreviewImg.style.display = 'none'; // Hide preview
+                    // console.log("removeImageButton: Cleared image URLs, paths, and hid preview.");
                 })
-                .catch(err => console.error("Feil ved sletting av bilde:", err));
+                .catch(err => {
+                    // console.error("removeImageButton: Error deleting image from storage:", err);
+                });
         } else {
-            console.log("Ingen bildebane funnet å slette.");
+            // console.log("removeImageButton: No image path found to delete.");
+            imagePreviewImg.src = "";
+            imagePreviewImg.style.display = 'none';
+            dishImageURL = ""; 
+            // console.log("removeImageButton: No image path, ensured preview is hidden and URL is cleared.");
         }
     });
 }
@@ -630,7 +649,8 @@ async function showDishes(filter, sortOrder, searchTerm) {
                     'ris': './images/rice.svg',
                     'gryte': './images/stew.svg',
                     'bowl': './images/bowl.svg',
-                    'ingen kategori': '' // Ingen ikon for "ingen kategori"
+                    'suppe': './images/soup.svg',
+                    'ingen kategori': '' 
                 };
 
                 let bottomLeftIconsHTML = '';
@@ -767,6 +787,7 @@ async function showDishes(filter, sortOrder, searchTerm) {
 let editingDishId = "null"
 
 async function changeTemplateValues(title="", subtitle="", meat="kjøtt", recipieLink="", type="Middag", favourite=false, imageUrlFromArgs="", imagePathFromArgs="", user="", subtype="", difficulty=0, createdAt="") {
+    // console.log("changeTemplateValues: Called with imageUrlFromArgs:", imageUrlFromArgs, "and imagePathFromArgs:", imagePathFromArgs);
     dishTitleInput.value = title;
     dishSubtitleInput.value = subtitle;
     dishMeatInput.value = meat;
@@ -799,11 +820,17 @@ async function changeTemplateValues(title="", subtitle="", meat="kjøtt", recipi
     
     // Oppdater bildevisning ved redigering
     if (imageUrlFromArgs) { // imageUrlFromArgs is dish.imageUrl or dish.image
+        // console.log("changeTemplateValues: Setting image preview. URL:", imageUrlFromArgs);
         imagePreviewImg.src = imageUrlFromArgs;
+        imagePreviewImg.style.display = 'block';
+        // console.log("changeTemplateValues: Set imagePreviewImg.src to:", imagePreviewImg.src, "and display to 'block'.");
         dishImageURL = imageUrlFromArgs; // Set global for potential re-save if unchanged
         currentDishImagePath = imagePathFromArgs || ""; // Set global path for potential deletion
     } else {
+        // console.log("changeTemplateValues: No imageUrlFromArgs. Hiding image preview.");
         imagePreviewImg.src = ""; // No fallback, just empty src for preview
+        imagePreviewImg.style.display = 'none';
+        // console.log("changeTemplateValues: Set imagePreviewImg.src to empty and display to 'none'.");
         dishImageURL = "";
         currentDishImagePath = "";
     }

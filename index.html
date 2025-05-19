@@ -89,6 +89,7 @@
                             <p class="option checked">Ris</p>
                             <p class="option checked">Gryte</p>
                             <p class="option checked">Bowl</p>
+                            <p class="option checked">Suppe</p>
                         </div>
                     </div>
 
@@ -120,25 +121,23 @@
                 <div class="dish-template-header">
                     <p class="dish-template-user"></p>
                     <p class="dish-template-created-at"></p>
-                    <img src="images/x.svg" class="dish-template-x">
+                    <img src="./images/x.svg" class="dish-template-x" alt="Lukk mal">
                 </div>
-                <input value="" class="dish-template-title"></input>
-                <input value="" class="dish-template-subtitle"></input>
+                <input class="dish-template-title" placeholder="Tittel..."></input>
+                <input class="dish-template-subtitle" placeholder="Ingredienser..."></input>
                 <div class="dish-template-image-button-div">
-                    <button type="button" class="take-pic-button">Ta bilde</button>
-                    <button type="button" class="select-pic-button">Velg bilde</button>
-                    <button type="button" class="remove-image-button">Fjern bilde</button>
-                    
-                    <!-- Input for å ta bilde (kamera) -->
-                    <input type="file" class="dish-template-image-button-take" accept="image/*" capture="environment" style="display: none;">
-                    <!-- Input for å velge bilde fra galleri -->
-                    <input type="file" class="dish-template-image-button-select" accept="image/*" style="display: none;">
-                    
+                    <button class="take-pic-button">Ta bilde</button>
+                    <input type="file" class="dish-template-image-button-take" accept="image/*" capture style="display:none;">
+                    <button class="select-pic-button">Velg bilde</button>
+                    <input type="file" class="dish-template-image-button-select" accept="image/*" style="display:none;">
+                    <button class="remove-image-button">Fjern bilde</button>
+                    <img class="dish-template-star" src="./images/star-outline.svg" alt="Favorittstjerne i mal">
+                </div>
+                <div class="image-drop-preview-wrapper">
                     <div class="dish-template-image-drop-zone">
                         <p>Dra og slipp et bilde her</p>
                     </div>
-                    <img src="." class="dish-template-image-preview" alt="Forhåndsvisning av bilde">
-                    <img src="./images/star-outline.svg" class="dish-template-star">
+                    <img class="dish-template-image-preview" src="#" alt="Forhåndsvisning av bilde" style="display: none;">
                 </div>
                 <select class="dish-template-meat">
                     <option value="kjøtt">Kjøtt</option>
@@ -153,6 +152,7 @@
                     <option value="ris">Ris</option>
                     <option value="gryte">Gryte</option>
                     <option value="bowl">Bowl</option>
+                    <option value="suppe">Suppe</option>
                 </select>
                 <div class="dish-template-difficulty-div">
                     <img src="./images/knife.svg" class="difficulty-knife template-knife-svg" data-value="1" alt="Difficulty 1">
